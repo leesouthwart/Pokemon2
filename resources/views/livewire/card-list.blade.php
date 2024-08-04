@@ -25,7 +25,7 @@
         <tbody class="divide-y divide-white/5">
 
         @foreach($cardList as $card)
-            <livewire:card :card="$card" :wire:key="$card->id"/>
+            <livewire:card :card="$card" :key="$card->id"  :wire:key="$card->id"/>
         @endforeach
 
         </tbody>

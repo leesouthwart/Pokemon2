@@ -124,7 +124,7 @@ Route::get('test3', function() {
 });
 
 Route::middleware('currency.convert')->group(function () {
-    Route::get('cardrush', [CardController::class, 'index'])->name('cardrush2');
+    Route::get('cardrush', [CardController::class, 'index'])->name('cardrush');
     Route::post('store_card', [CardController::class, 'store'])->name('card.store');
 
     Route::get('upload', [BatchController::class, 'create'])->name('batch.create');
