@@ -33,37 +33,39 @@ class EbayService
 
         $itemCardPrice = 0;
 
-        foreach ($data['itemSummaries'] as $item) {
-            $items[] = [
-                'title' => $item['title'],
-                'price' => number_format($item['price']['value'] + $item['shippingOptions'][0]['shippingCost']['value'] ?? 0, 2),
-                'image' => $item['image']['imageUrl'],
-                'url' => $item['itemWebUrl'],
-                'seller' => $item['seller'],
-            ];
+        if(isset($data['itemSummaries'])) {
+            foreach ($data['itemSummaries'] as $item) {
+                $items[] = [
+                    'title' => $item['title'],
+                    'price' => number_format($item['price']['value'] + $item['shippingOptions'][0]['shippingCost']['value'] ?? 0, 2),
+                    'image' => $item['image']['imageUrl'],
+                    'url' => $item['itemWebUrl'],
+                    'seller' => $item['seller'],
+                ];
 
-            $itemCardPrice += $item['price']['value'];
-            $itemCardPrice += $item['shippingOptions'][0]['shippingCost']['value'] ?? 0;
+                $itemCardPrice += $item['price']['value'];
+                $itemCardPrice += $item['shippingOptions'][0]['shippingCost']['value'] ?? 0;
+            }
+
+            $averageItemCardPrice = number_format($itemCardPrice / count($data['itemSummaries']), 2);
+            $lowestItemCardPrice = min(array_column($items, 'price'));
+
+            $card = Card::where('search_term', $searchTerm)->first();
+
+            if($card) {
+                $card->psa_10_price = $lowestItemCardPrice;
+                $card->average_psa_10_price = $averageItemCardPrice;
+
+                $card->roi_lowest = $this->calcRoi($card->converted_price, $lowestItemCardPrice);
+                $card->roi_average = $this->calcRoi($card->converted_price, $averageItemCardPrice);
+
+                $card->save();
+            } else {
+                Log::error('Card not found for ' . $searchTerm);
+            }
+
+            return $items;
         }
-
-        $averageItemCardPrice = number_format($itemCardPrice / count($data['itemSummaries']), 2);
-        $lowestItemCardPrice = min(array_column($items, 'price'));
-
-        $card = Card::where('search_term', $searchTerm)->first();
-
-        if($card) {
-            $card->psa_10_price = $lowestItemCardPrice;
-            $card->average_psa_10_price = $averageItemCardPrice;
-
-            $card->roi_lowest = $this->calcRoi($card->converted_price, $lowestItemCardPrice);
-            $card->roi_average = $this->calcRoi($card->converted_price, $averageItemCardPrice);
-
-            $card->save();
-        } else {
-            Log::error('Card not found for ' . $searchTerm);
-        }
-
-        return $items;
     }
 
     public function getEbayDataForPsaListing($searchTerm)

@@ -40,7 +40,7 @@ class Card extends Model
 
         $json = json_decode($response->getBody()->getContents(), true);
         $jsonData = $json['result']['selectorElements'];
-//
+        //
 //        dd($jsonData);
 
 //        // FOR TESTING
@@ -69,7 +69,7 @@ class Card extends Model
 
         $data = [
             'cr_price' => str_replace('円', '', $jsonData[1]['textNodes'][0]),
-            'image_url' => $xpath->evaluate("string(//img/@src)")
+            'image_url' => $xpath->evaluate("string(//a/@href)")
         ];
 
         return $data;

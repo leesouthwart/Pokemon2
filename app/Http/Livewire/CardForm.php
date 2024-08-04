@@ -41,7 +41,7 @@ class CardForm extends Component
             $this->ebayService->getEbayData($this->searchTerm);
 
         } catch (\Exception $e) {
-            dd('Error: ' . $e->getMessage());
+            Log::error('Error: ' . $e->getMessage());
         }
 
         $this->resetVars();

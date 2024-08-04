@@ -10,9 +10,6 @@ Add 'searching' to the card list
 
 error when focusing card with no psa listings
 
-https://i.imgur.com/ak87EYt.png add images to card list
-
-pagination on card list
 
 --
 
@@ -44,3 +41,8 @@ Create a 'Generate List' functionality to generate a list of cards based on a se
 --
 
 Use sold data to determine approximate popularity
+
+--
+'Undercut alert' functionality. Essentially when checking a cards ebay data,
+if we notice darkhoundoom in the list and its not the lowest list, create a model row
+and store it somewhere that we can see.
