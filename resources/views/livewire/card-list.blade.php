@@ -24,9 +24,9 @@
         </thead>
         <tbody class="divide-y divide-white/5">
 
-        @foreach($cardList as $card)
-            <livewire:card :card="$card" :wire:key="$card->id"/>
-        @endforeach
+{{--        @foreach($cardList as $card)--}}
+{{--            <livewire:card :card="$card" :wire:key="$card->id"/>--}}
+{{--        @endforeach--}}
 
         </tbody>
     </table>

@@ -123,8 +123,6 @@ Route::get('test3', function() {
    dd($items);
 });
 
-Route::get('cardrush2', [CardController::class, 'index'])->name('cardrush2');
-
 Route::middleware('currency.convert')->group(function () {
     Route::get('cardrush', [CardController::class, 'index'])->name('cardrush');
     Route::post('store_card', [CardController::class, 'store'])->name('card.store');
