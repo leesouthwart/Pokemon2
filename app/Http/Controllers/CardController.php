@@ -8,7 +8,7 @@ use App\Models\Card;
 
 class CardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         return view('cards.index');
     }
