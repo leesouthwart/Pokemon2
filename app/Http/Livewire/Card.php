@@ -5,9 +5,13 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 
 use App\Models\Card as CardModel;
+use Livewire\WithPagination;
 
 class Card extends Component
 {
+
+    use WithPagination;
+    
     public CardModel $card;
     public $searchTerm;
     public $roiLowestColor;
