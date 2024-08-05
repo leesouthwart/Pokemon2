@@ -9,9 +9,8 @@ use Livewire\WithPagination;
 
 class Card extends Component
 {
-
     use WithPagination;
-    
+
     public CardModel $card;
     public $searchTerm;
     public $roiLowestColor;
