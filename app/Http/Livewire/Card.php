@@ -7,12 +7,17 @@ use Livewire\Component;
 use App\Models\Card as CardModel;
 use Livewire\WithPagination;
 
+use App\Models\Region;
+
 class Card extends Component
 {
     public CardModel $card;
     public $searchTerm;
     public $roiLowestColor;
-    public $roiAverageColor;
+
+    public $psa10Prices = [];
+    public $averagePsa10Prices = [];
+    public $rois = [];
 
     public $listeners = ['cardUpdated'];
 
@@ -21,7 +26,9 @@ class Card extends Component
     {
         $this->card = $card;
         $this->searchTerm = $this->card->search_term;
+        $this->setUpPrices();
         $this->calculateColours();
+
     }
     public function render()
     {
@@ -35,8 +42,8 @@ class Card extends Component
 
     private function calculateColours()
     {
-        $lowest = $this->card->roi_lowest;
-        $average = $this->card->roi_average;
+        $lowest = $this->rois[\App\Models\Region::GB];
+
         $colours = [
             'light_green' => 'text-green-400',
             'green' => 'text-green-600',
@@ -53,16 +60,6 @@ class Card extends Component
         } else {
             $this->roiLowestColor =  $colours['red'];
         }
-
-        if ($average > 75) {
-            $this->roiAverageColor =  $colours['light_green'];
-        } elseif ($average > 50 && $average < 75) {
-            $this->roiAverageColor =  $colours['green'];
-        } elseif ($average > 30 && $average < 50) {
-            $this->roiAverageColor =  $colours['orange'];
-        } elseif ($average < 30) {
-            $this->roiAverageColor =  $colours['red'];
-        }
     }
 
     public function cardUpdated($card)
@@ -70,5 +67,13 @@ class Card extends Component
         if($this->card->id == $card['id']) {
             $this->mount(CardModel::find($card['id']));
         }
+    }
+
+    public function setUpPrices()
+    {
+
+        $this->psa10Prices[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->psa_10_price;
+        $this->averagePsa10Prices[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->average_psa_10_price;
+        $this->rois[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->calcRoi($this->card->price);
     }
 }

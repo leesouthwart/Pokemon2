@@ -18,22 +18,35 @@
     </td>
     <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8">
         <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 text-gray-400">{{$currency->symbol}}{{$card->psa_10_price}}</div>
+            <div class="font-mono text-sm leading-6 text-gray-400">
+                @if($psa10Prices[\App\Models\Region::GB] == 0)
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                @else
+                {{$currency->symbol}}{{$psa10Prices[\App\Models\Region::GB]}}
+                @endif
+            </div>
         </div>
     </td>
     <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8">
         <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 text-gray-400">{{$currency->symbol}}{{$card->average_psa_10_price}}</div>
+            <div class="font-mono text-sm leading-6 text-gray-400">
+                @if($psa10Prices[\App\Models\Region::GB] == 0)
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                @else
+                    {{$currency->symbol}}{{$averagePsa10Prices[\App\Models\Region::GB]}}
+                @endif
+            </div>
         </div>
     </td>
     <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8">
         <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 {{$roiLowestColor}}">{{$card->roi_lowest}}%</div>
-        </div>
-    </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 {{$roiAverageColor}}">{{$card->roi_average}}%</div>
+            <div class="font-mono text-sm leading-6 {{$roiLowestColor}}">
+                @if($rois[\App\Models\Region::GB] == 0)
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                @else
+                {{$rois[\App\Models\Region::GB]}}%
+                @endif
+            </div>
         </div>
     </td>
 

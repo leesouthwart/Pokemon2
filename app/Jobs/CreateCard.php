@@ -3,6 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\Card;
+use App\Models\Region;
+use App\Models\RegionCard;
 use App\Services\EbayService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -46,21 +48,27 @@ class CreateCard implements ShouldQueue
             return;
          }
 
-        try {
-            $card = new Card;
+        $regions = Region::all();
 
-            $data = $card->getCardDataFromCr($this->url);
+        foreach ($regions as $region) {
+            try {
+                $card = new Card;
 
-            $card->search_term = $this->searchTerm;
-            $card->url = $this->url;
-            $card->cr_price = $data['cr_price'];
-            $card->image_url = $data['image_url'];
-            $card->save();
+                $data = $card->getCardDataFromCr($this->url);
 
-            $this->ebayService->getEbayData($this->searchTerm);
+                $card->search_term = $this->searchTerm;
+                $card->url = $this->url;
+                $card->cr_price = $data['cr_price'];
+                $card->image_url = $data['image_url'];
+                $card->save();
 
-        } catch (\Exception $e) {
-            Log::error('Error: ' . $e->getMessage());
+                $this->ebayService->getEbayData($this->searchTerm, $region);
+
+            } catch (\Exception $e) {
+                Log::error('Error: ' . $e->getMessage());
+            }
         }
+
+        sleep(10); // Add a slight delay to prevent rate limiting
     }
 }

@@ -6,6 +6,8 @@ use App\Services\AccessTokenService;
 
 use Illuminate\Support\Facades\Http;
 use App\Models\Card;
+use App\Models\Region;
+use App\Models\RegionCard;
 
 class EbayService
 {
@@ -18,16 +20,21 @@ class EbayService
    }
 
    // Get data from eBay API. Called when Cards are first submitted and when they are focused on. Gets most up to date data and updates the card.
-    public function getEbayData($searchTerm)
+    public function getEbayData($searchTerm, Region $region)
     {
+        if(!$region) {
+            Log::error('Region not found for ' . $region->id);
+            return;
+        }
+
         // @todo figure out a better way to always have PSA 10 in the search term WITHOUT saving it in DB (as this would change front end forms)
         $searchTermEbay = $searchTerm . ' PSA 10';
 
         $response = Http::withHeaders([
-            'X-EBAY-C-MARKETPLACE-ID' => 'EBAY_GB',
-            'X-EBAY-C-ENDUSERCTX' => 'contextualLocation=country%3DUK%2Czip%3DLE77JG',
+            'X-EBAY-C-MARKETPLACE-ID' => $region->ebay_marketplace_id,
+            'X-EBAY-C-ENDUSERCTX' => $region->ebay_end_user_context,
             'Authorization' => 'Bearer ' . $this->accessToken,
-        ])->get('https://api.ebay.com/buy/browse/v1/item_summary/search?q=' . $searchTermEbay .'&limit=3&sort=price&filter=itemLocationCountry:GB');
+        ])->get('https://api.ebay.com/buy/browse/v1/item_summary/search?q=' . $searchTermEbay .'&limit=3&sort=price&filter=itemLocationCountry:' . $region->ebay_country_code);
 
         $data = $response->json();
 
@@ -50,24 +57,31 @@ class EbayService
             $averageItemCardPrice = number_format($itemCardPrice / count($data['itemSummaries']), 2);
             $lowestItemCardPrice = min(array_column($items, 'price'));
 
-            $card = Card::where('search_term', $searchTerm)->first();
-
-            if($card) {
-                $card->psa_10_price = $lowestItemCardPrice;
-                $card->average_psa_10_price = $averageItemCardPrice;
-
-                $card->roi_lowest = $this->calcRoi($card->converted_price, $lowestItemCardPrice);
-                $card->roi_average = $this->calcRoi($card->converted_price, $averageItemCardPrice);
-
-                $card->save();
-            } else {
-                Log::error('Card not found for ' . $searchTerm);
-            }
-
-            return $items;
         }
+
+        $cardModel = Card::where('search_term', $searchTerm)->first();
+
+        if($cardModel) {
+            RegionCard::updateOrCreate(
+                [
+                    'card_id' => $cardModel->id,
+                    'region_id' => $region->id,
+                ],
+                [
+                    'psa_10_price' => $lowestItemCardPrice ?? 0,
+                    'average_psa_10_price' => $averageItemCardPrice ?? 0,
+                ]
+            );
+
+        } else {
+            Log::error('Card not found for ' . $searchTerm);
+        }
+
+        return $items;
     }
 
+
+    // Functionality for /upload prices
     public function getEbayDataForPsaListing($searchTerm)
     {
         $search = app()->environment('local') ? 'car' : $searchTerm;

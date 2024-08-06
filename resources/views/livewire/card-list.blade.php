@@ -3,7 +3,7 @@
         <colgroup>
             <col class="w-full sm:w-1/12">
             <col class="lg:w-4/12">
-            <col class="lg:w-3/12">
+            <col class="lg:w-4/12">
             <col class="lg:w-1/12">
             <col class="lg:w-1/12">
             <col class="lg:w-1/12">
@@ -17,8 +17,7 @@
             <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell">Raw Price</th>
             <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20">PSA 10 (lowest)</th>
             <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold md:table-cell lg:pr-20">PSA 10 (average)</th>
-            <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">ROI (lowest)</th>
-            <th scope="col" class="hidden py-2 pl-0 pr-4 text-right font-semibold sm:table-cell sm:pr-6 lg:pr-8">ROI (average)</th>
+            <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">ROI</th>
             <th scope="col" class="hidden py-2 pl-0 pr-4 text-right font-semibold sm:table-cell sm:pr-6 lg:pr-8">Actions</th>
         </tr>
         </thead>

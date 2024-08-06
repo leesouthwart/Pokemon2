@@ -16,14 +16,14 @@ class Card extends Model
     public $fillable = [
         'search_term',
         'url',
-        'psa_10_price',
-        'average_psa_10_price',
-        'roi_lowest',
-        'roi_average',
         'price',
         'image_url',
     ];
 
+    public function regionCards()
+    {
+        return $this->hasMany(RegionCard::class);
+    }
 
 
     public function getCardDataFromCr($url)
