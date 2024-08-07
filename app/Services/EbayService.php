@@ -77,7 +77,7 @@ class EbayService
             Log::error('Card not found for ' . $searchTerm);
         }
 
-        return $items;
+        return $items ?? [];
     }
 
 

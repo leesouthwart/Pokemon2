@@ -43,24 +43,24 @@ class CreateCard implements ShouldQueue
     {
         $existingCard = Card::where('search_term', $this->searchTerm)->first();
 
-        if ($existingCard) {
-            Log::info('Card already exists for ' . $this->searchTerm);
-            return;
-         }
-
         $regions = Region::all();
 
         foreach ($regions as $region) {
             try {
-                $card = new Card;
+                if (!$existingCard) {
+                    $card = new Card;
 
-                $data = $card->getCardDataFromCr($this->url);
+                    $data = $card->getCardDataFromCr($this->url);
 
-                $card->search_term = $this->searchTerm;
-                $card->url = $this->url;
-                $card->cr_price = $data['cr_price'];
-                $card->image_url = $data['image_url'];
-                $card->save();
+                    $card->search_term = $this->searchTerm;
+                    $card->url = $this->url;
+                    $card->cr_price = $data['cr_price'];
+                    $card->image_url = $data['image_url'];
+                    $card->save();
+
+                } else {
+                    $card = $existingCard;
+                }
 
                 $this->ebayService->getEbayData($this->searchTerm, $region);
 
