@@ -32,8 +32,11 @@ class RegionCard extends Model
             return 0;
         }
 
+        $price = floatval($price);
+
         // Calculate $afterFees
         $afterFees = $this->psa_10_price - (0.155 * $this->psa_10_price); // Subtract 15.5% of $price2
+
 
         // Check if $price2 is greater than 30
         if ($this->psa_10_price > 30) {
@@ -44,6 +47,8 @@ class RegionCard extends Model
 
         // Calculate the adjusted initial price
         $initialPrice = $price + 13;
+
+//        dd($price, $initialPrice, $afterFees);
 
         // Calculate ROI
         // ROI formula: ((Final Value - Initial Value) / Initial Value) * 100

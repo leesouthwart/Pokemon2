@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Services\EbayService;
 
 use App\Models\Card;
+use App\Models\Region;
 
 class Sidebar extends Component
 {
@@ -33,7 +34,7 @@ class Sidebar extends Component
         $this->card = Card::find($card);
 
         if (!isset($this->ebayData[$this->card->id])) {
-            $this->ebayData[$this->card->id] = $this->ebayService->getEbayData($this->card->search_term);
+            $this->ebayData[$this->card->id] = $this->ebayService->getEbayData($this->card->search_term, Region::find(Region::GB));
         }
 
         $this->loading = false;

@@ -71,9 +71,9 @@ class Card extends Component
 
     public function setUpPrices()
     {
-
         $this->psa10Prices[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->psa_10_price;
         $this->averagePsa10Prices[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->average_psa_10_price;
-        $this->rois[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->calcRoi($this->card->price);
+        $this->rois[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->calcRoi($this->card->converted_price);
+
     }
 }
