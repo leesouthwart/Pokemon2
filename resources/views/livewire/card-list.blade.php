@@ -1,4 +1,9 @@
 <div class="bg-gray-900 py-10">
+
+    <div class="px-4 w-1/4">
+        <input type="text" name="search_term" id="search" wire:model="search" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Search...">
+    </div>
+
     <table class="mt-6 w-full whitespace-nowrap text-left">
         <colgroup>
             <col class="w-full sm:w-1/12">

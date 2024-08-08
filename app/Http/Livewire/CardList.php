@@ -12,13 +12,20 @@ class CardList extends Component
 
     use withPagination;
 
+    public $search = '';
 
     public function render()
     {
-        return view('livewire.card-list',
-            [
-                'cardList' => Card::paginate(20),
-            ]
-        );
+        $cards = Card::where('search_term', 'like', '%' . $this->search . '%') // Adjust 'name' to your searchable column
+        ->paginate(20);
+
+        return view('livewire.card-list', [
+            'cardList' => $cards,
+        ]);
+    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage(); // Reset to the first page when the search changes
     }
 }
