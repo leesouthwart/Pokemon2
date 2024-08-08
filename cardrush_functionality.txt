@@ -8,7 +8,9 @@ Add 'filtering' to the card list
 Add 'sorting' to the card list
 Add 'searching' to the card list
 
-error when focusing card with no psa listings
+Add 'favourites'
+
+
 
 Show profit on card list item
 

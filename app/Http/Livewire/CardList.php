@@ -17,7 +17,7 @@ class CardList extends Component
     {
         return view('livewire.card-list',
             [
-                'cardList' => Card::where('search_term', 'pikachu 001 015')->paginate(20),
+                'cardList' => Card::paginate(20),
             ]
         );
     }
