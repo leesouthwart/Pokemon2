@@ -6,7 +6,6 @@ Setup Command to consistently update card data. Figure out how we want to schedu
 
 Add 'filtering' to the card list
 Add 'sorting' to the card list
-Add 'searching' to the card list
 
 Add 'favourites'
 
