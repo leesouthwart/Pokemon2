@@ -15,6 +15,7 @@ class Sidebar extends Component
     public $card;
     public bool $loading = false;
     protected EbayService|null $ebayService = null;
+    public bool $show = false;
 
     public $listeners = ['cardSelected'];
 
@@ -31,6 +32,7 @@ class Sidebar extends Component
     public function cardSelected($card)
     {
         $this->loading = true;
+        $this->show = true;
         $this->card = Card::find($card);
 
         if (!isset($this->ebayData[$this->card->id])) {
