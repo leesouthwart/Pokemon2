@@ -2,11 +2,11 @@
     <div class="bg-gray-700 w-4/5">
         <div class="w-full bg-gray-500 flex items-center px-3 py-2 mb-3">
             <div class="form-container w-1/3">
-                <input wire:model="start" id="searchTerm" type="text" class="w-full bg-gray-600 text-gray-300" placeholder="Starting Cert Number">
+                <input wire:model.live="start" id="searchTerm" type="text" class="w-full bg-gray-600 text-gray-300" placeholder="Starting Cert Number">
             </div>
 
             <div class="card_url w-1/3 mx-3">
-                <input type="text" class="w-full bg-gray-600 text-gray-300" wire:model="end" placeholder="Ending Cert Number">
+                <input type="text" class="w-full bg-gray-600 text-gray-300" wire:model.live="end" placeholder="Ending Cert Number">
             </div>
 
             <div class="button_container">

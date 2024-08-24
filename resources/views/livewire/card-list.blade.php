@@ -1,7 +1,7 @@
 <div class="bg-gray-900 py-10">
 
     <div class="px-4 w-1/4">
-        <input type="text" name="search_term" id="search" wire:model="search" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Search...">
+        <input type="text" name="search_term" id="search" wire:model.live="search" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Search...">
     </div>
 
     <table class="mt-6 w-full whitespace-nowrap text-left">
@@ -18,8 +18,8 @@
         <thead class="border-b border-white/10 text-sm leading-6 text-white">
         <tr>
             <th scope="col" class="py-2 px-2 font-semibold"></th>
-            <th scope="col" class="py-2 pl-4 pr-8 font-semibold sm:pl-6 lg:pl-8">Card Name</th>
-            <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell">Raw Price</th>
+            <th scope="col" class="py-2 pl-4 pr-8 font-semibold sm:pl-6 lg:pl-8 cursor-pointer" wire:click="sortBy('search_term')">Card Name</th>
+            <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell" wire:click="sortBy('cr_price')">Raw Price</th>
             <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20">PSA 10 (lowest)</th>
             <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold md:table-cell lg:pr-20">PSA 10 (average)</th>
             <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">ROI</th>

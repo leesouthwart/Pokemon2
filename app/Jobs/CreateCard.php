@@ -54,7 +54,7 @@ class CreateCard implements ShouldQueue
 
                     $card->search_term = $this->searchTerm;
                     $card->url = $this->url;
-                    $card->cr_price = $data['cr_price'];
+                    $card->cr_price = intval(str_replace(',', '', $data['cr_price']));
                     $card->image_url = $data['image_url'];
                     $card->save();
 

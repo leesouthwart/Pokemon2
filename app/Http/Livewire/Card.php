@@ -37,7 +37,7 @@ class Card extends Component
 
     public function selectCard()
     {
-        $this->emit('cardSelected', $this->card->id);
+        $this->dispatch('cardSelected', $this->card->id);
     }
 
     private function calculateColours()

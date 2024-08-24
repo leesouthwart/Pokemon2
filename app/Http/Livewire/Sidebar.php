@@ -40,6 +40,6 @@ class Sidebar extends Component
         }
 
         $this->loading = false;
-        $this->emit('cardUpdated', $this->card);
+        $this->dispatch('cardUpdated', $this->card);
     }
 }
