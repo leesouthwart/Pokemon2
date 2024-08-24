@@ -35,20 +35,13 @@ class RegionCard extends Model
         $price = floatval($price);
 
         // Calculate $afterFees
-        $afterFees = $this->psa_10_price - (0.155 * $this->psa_10_price); // Subtract 15.5% of $price2
+        $afterFees = $this->psa_10_price - ((auth()->user()->ebay_fee ?? 0.155) * $this->psa_10_price); // Subtract users ebay fee
 
 
-        // Check if $price2 is greater than 30
-        if ($this->psa_10_price > 30) {
-            $afterFees -= 3; // Subtract 3 if $price2 is greater than 30
-        } else {
-            $afterFees -= 1.75; // Subtract 2 if $price2 is 30 or less
-        }
+        $afterFees -= auth()->user()->shipping_cost;
 
         // Calculate the adjusted initial price
-        $initialPrice = $price + 13;
-
-//        dd($price, $initialPrice, $afterFees);
+        $initialPrice = $price + auth()->user()->grading_cost;
 
         // Calculate ROI
         // ROI formula: ((Final Value - Initial Value) / Initial Value) * 100

@@ -1,8 +1,7 @@
-
-
-Setup Command to consistently update card data. Figure out how we want to schedule these.
-    - CR Data
-    - eBay Data
+--
+Front end work. create navigation.
+Settings page for users (might already exist from scaffolding?)
+--
 
 Add 'filtering' to the card list
 Add 'sorting' to the card list
@@ -10,9 +9,19 @@ Add 'sorting' to the card list
 Add 'favourites'
 
 
-
 Show profit on card list item
 
+--
+
+SOLD LISTINGS DATA using Countdown API
+
+We need to basically remake all of the functionality for current listings but with sold listings
+we'll change to using sold listings data as the primary driver for ROI
+
+Need a 'SoldListingsModel' to store sold listings because we dont want to actually request these when clicking on the row
+like we do with live data.
+
+Use sold data to determine approximate popularity (more sales = more popularity, figure out where to store this - card model?)
 
 --
 
@@ -20,7 +29,6 @@ Show profit on card list item
 Add a 'Region selector' which will change the current currency and we'll use this to determine region
 
 
-Make 'ebay fee' and shipping fees configurable per user
 
 All this because we dont have to have GBP listings in the AUS users and vice versa
 
@@ -35,7 +43,10 @@ Add Auth to Batch and use that to log if a card has been listed recently. Can do
 
 Create a 'popularity' algorithm to sort cards by popularity
 
-
+--
+Setup Command to consistently update card data. Figure out how we want to schedule these.
+    - CR Data
+    - eBay Data
 --
 
 Create a 'Generate List' functionality to generate a list of cards based on a set of filters & popularity
@@ -43,9 +54,6 @@ Create a 'Generate List' functionality to generate a list of cards based on a se
 
 --
 
-Use sold data to determine approximate popularity
-
---
 'Undercut alert' functionality. Essentially when checking a cards ebay data,
 if we notice darkhoundoom in the list and its not the lowest list, create a model row
 and store it somewhere that we can see.

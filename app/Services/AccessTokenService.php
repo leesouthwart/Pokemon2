@@ -32,6 +32,7 @@ class AccessTokenService
         curl_setopt($ch, CURLOPT_POST, 1);
 //        curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials&scope=". urlencode("https://api.ebay.com/oauth/api_scope https://api.ebay.com/oauth/api_scope/buy.item.feed https://api.ebay.com/oauth/api_scope/buy.marketplace.insights"));
         curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials&scope=". urlencode("https://api.ebay.com/oauth/api_scope"));
+        //curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials&scope=". urlencode("https://api.ebay.com/oauth/api_scope/buy.marketplace.insights"));
 
         $response = curl_exec($ch);
 

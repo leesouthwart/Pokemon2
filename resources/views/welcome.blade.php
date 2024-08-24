@@ -36,9 +36,6 @@
                 </div>
             @endif
 
-            <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
-                <a target="_blank" href="{{config('ebay.login')}}}}">Login to ebay</a>
-            </div>
         </div>
     </body>
 </html>

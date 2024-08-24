@@ -57,4 +57,23 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    public function ebaySettingsUpdate(Request $request): RedirectResponse
+    {
+        $request->validateWithBag('ebaySettingsUpdate', [
+            'shipping_cost' => ['required', 'numeric'],
+            'ebay_fee' => ['required', 'numeric'],
+            'grading_cost' => ['required', 'numeric'],
+        ]);
+
+        $user = $request->user();
+
+        $user->shipping_cost = $request->input('shipping_cost');
+        $user->ebay_fee = $request->input('ebay_fee');
+        $user->grading_cost = $request->input('grading_cost');
+
+        $user->save();
+
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
 }
