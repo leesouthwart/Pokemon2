@@ -18,8 +18,15 @@ class CardList extends Component
 
     public function render()
     {
-        $cards = Card::where('search_term', 'like', '%' . $this->search . '%') // Adjust 'name' to your searchable column
+//        $cards = Card::with('regionCards')->where('search_term', 'like', '%' . $this->search . '%') // Adjust 'name' to your searchable column
+//            ->orderBy($this->sortField, $this->sortDirection)
+//            ->paginate(20);
+
+        $cards = Card::with('regionCards')
+            ->where('search_term', 'like', '%' . $this->search . '%')
+            ->join('region_cards', 'cards.id', '=', 'region_cards.card_id')
             ->orderBy($this->sortField, $this->sortDirection)
+            ->select('cards.*') // Ensure only card fields are selected
             ->paginate(20);
 
         return view('livewire.card-list', [

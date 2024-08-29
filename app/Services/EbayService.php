@@ -34,7 +34,7 @@ class EbayService
             'X-EBAY-C-MARKETPLACE-ID' => $region->ebay_marketplace_id,
             'X-EBAY-C-ENDUSERCTX' => $region->ebay_end_user_context,
             'Authorization' => 'Bearer ' . $this->accessToken,
-        ])->get('https://api.ebay.com/buy/browse/v1/item_summary/search?q=' . $searchTermEbay .'&limit=3&sort=price&filter=itemLocationCountry:' . $region->ebay_country_code);
+        ])->get('https://api.ebay.com/buy/browse/v1/item_summary/search?q=' . $searchTermEbay .'&limit=5&sort=price&filter=itemLocationCountry:' . $region->ebay_country_code);
 
         $data = $response->json();
 
