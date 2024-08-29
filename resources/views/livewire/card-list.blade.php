@@ -19,7 +19,7 @@
         <tr>
             <th scope="col" class="py-2 px-2 font-semibold"></th>
             <th scope="col" class="py-2 pl-4 pr-8 font-semibold sm:pl-6 lg:pl-8 cursor-pointer" wire:click="sortBy('search_term')">Card Name</th>
-            <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell" wire:click="sortBy('cr_price')">Raw Price</th>
+            <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell cursor-pointer" wire:click="sortBy('cr_price')">Raw Price</th>
             <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20">PSA 10 (lowest)</th>
             <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold md:table-cell lg:pr-20">PSA 10 (average)</th>
             <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">ROI</th>
