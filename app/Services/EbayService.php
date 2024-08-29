@@ -61,18 +61,17 @@ class EbayService
 
         $cardModel = Card::where('search_term', $searchTerm)->first();
 
-        if($cardModel) {
+        if ($cardModel) {
             RegionCard::updateOrCreate(
                 [
                     'card_id' => $cardModel->id,
                     'region_id' => $region->id,
                 ],
                 [
-                    'psa_10_price' => $lowestItemCardPrice ?? 0,
-                    'average_psa_10_price' => $averageItemCardPrice ?? 0,
+                    'psa_10_price' => isset($lowestItemCardPrice) ? floatval(str_replace(',', '', $lowestItemCardPrice)) : 0,
+                    'average_psa_10_price' => isset($averageItemCardPrice) ? floatval(str_replace(',', '', $averageItemCardPrice)) : 0,
                 ]
             );
-
         } else {
             Log::error('Card not found for ' . $searchTerm);
         }
