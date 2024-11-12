@@ -76,4 +76,12 @@ class Card extends Component
         $this->rois[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->calcRoi($this->card->converted_price);
 
     }
+
+    public function delete()
+    {
+        if(auth()->user()->email == config('settings.admin_email')) {
+            dd($this->card);
+            $this->card->delete();
+        }
+    }
 }

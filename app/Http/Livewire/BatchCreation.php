@@ -18,12 +18,14 @@ class BatchCreation extends Component
     public $batch;
     public $listings;
     public bool $loading = false;
+    public bool $useList = false;
+    public string $list = '';
 
     protected $listeners = ['echo:jobs,JobCompleted' => 'handleListingDone'];
 
     public function mount()
     {
-        //$this->batch = \App\Models\Batch::find(30);
+        $this->batch = \App\Models\Batch::find(50);
         $this->listings = $this->batch->ebayListings ?? null;
     }
 
@@ -39,9 +41,18 @@ class BatchCreation extends Component
         ]);
 
         $this->loading = true;
-        for ($i = $this->start; $i <= $this->end; $i++) {
-            \App\Jobs\CreateEbayListing::dispatch($i, $this->batch);
+        if(!$this->useList) {
+            for ($i = $this->start; $i <= $this->end; $i++) {
+                \App\Jobs\CreateEbayListing::dispatch($i, $this->batch);
+            }
+        } else {
+            $list = explode(',', $this->list);
+
+            foreach($list as $i) {
+                \App\Jobs\CreateEbayListing::dispatch($i, $this->batch);
+            }
         }
+        
     }
 
     public function handleListingDone()

@@ -7,4 +7,5 @@ return [
     //'psa_scrape_url_base' => 'https://api.scrapingrobot.com/?token=' . env('scraping_robot_api_key') . '&render=true&url=',
     'psa_api_access_token' => env('psa_api_access_token'),
     'scrape_ebay_url_base' => 'https://api.scrapingrobot.com/?token=' . env('scraping_robot_api_key') . '&render=true&scrapeSelector=%2Es-item&url=https://www.ebay.com/sch/i.html?LH_Complete=1l&LH_Sold=1&_nkw=',
+    'admin_email' => env('admin_email', 'leesouthwart@gmail.com'),
 ];

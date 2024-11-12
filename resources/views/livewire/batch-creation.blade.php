@@ -1,6 +1,7 @@
 <div class="flex">
     <div class="bg-gray-700 w-4/5">
         <div class="w-full bg-gray-500 flex items-center px-3 py-2 mb-3">
+            @if(!$useList)
             <div class="form-container w-1/3">
                 <input wire:model.live="start" id="searchTerm" type="text" class="w-full bg-gray-600 text-gray-300" placeholder="Starting Cert Number">
             </div>
@@ -8,9 +9,18 @@
             <div class="card_url w-1/3 mx-3">
                 <input type="text" class="w-full bg-gray-600 text-gray-300" wire:model.live="end" placeholder="Ending Cert Number">
             </div>
+            @else
+            <div class="card_url w-2/3 mx-3">
+                <input type="text" class="w-full bg-gray-600 text-gray-300" wire:model.live="list" placeholder="Comma Seperated list">
+            </div>
+            @endif
 
             <div class="button_container">
                 <button type="button" wire:click="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Start</button>
+            </div>
+
+            <div class="button_container">
+                <button type="button" wire:click="$toggle('useList')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-5">List format</button>
             </div>
         </div>
 

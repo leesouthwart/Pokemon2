@@ -18,10 +18,6 @@ class CardList extends Component
 
     public function render()
     {
-//        $cards = Card::with('regionCards')->where('search_term', 'like', '%' . $this->search . '%') // Adjust 'name' to your searchable column
-//            ->orderBy($this->sortField, $this->sortDirection)
-//            ->paginate(20);
-
         $cards = Card::with('regionCards')
             ->where('search_term', 'like', '%' . $this->search . '%')
             ->join('region_cards', 'cards.id', '=', 'region_cards.card_id')
