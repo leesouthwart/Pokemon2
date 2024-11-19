@@ -25,7 +25,7 @@ class BatchCreation extends Component
 
     public function mount()
     {
-        $this->batch = \App\Models\Batch::find(50);
+        $this->batch = \App\Models\Batch::find(55);
         $this->listings = $this->batch->ebayListings ?? null;
     }
 

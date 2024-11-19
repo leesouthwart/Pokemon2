@@ -83,6 +83,6 @@ class CreateEbayListing implements ShouldQueue
             ]);
         }
 
-        event(new JobCompleted());
+       // event(new JobCompleted());
     }
 }
