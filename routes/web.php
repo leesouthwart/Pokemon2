@@ -5,6 +5,7 @@ use App\Http\Controllers\Ebay\OAuthController as EbayOAuthController;
 use App\Http\Controllers\BidController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\CardController;
+use App\Http\Controllers\CardGroupController;
 
 use App\Models\EbayProfile;
 use App\Models\OauthToken;
@@ -90,6 +91,8 @@ Route::get('test2', function() {
 Route::middleware(['currency.convert', 'auth'])->group(function () {
     Route::get('cardrush', [CardController::class, 'index'])->name('cardrush');
     Route::post('store_card', [CardController::class, 'store'])->name('card.store');
+    Route::get('group', [CardGroupController::class, 'index'])->name('card_group.index');
+    Route::get('group/{id}', [CardGroupController::class, 'view'])->name('card_group.single');
 
     Route::get('upload', [BatchController::class, 'create'])->name('batch.create');
 });

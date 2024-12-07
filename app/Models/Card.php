@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 use GuzzleHttp\Client;
 use DOMDocument;
@@ -26,6 +27,10 @@ class Card extends Model
         return $this->hasMany(RegionCard::class);
     }
 
+    public function cardGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(CardGroup::class, 'card_cardgroup');
+    }
 
     public function getCardDataFromCr($url)
     {
