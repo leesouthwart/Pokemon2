@@ -77,11 +77,9 @@ class Card extends Component
 
     }
 
-    public function delete()
+   
+    public function emitSelectedCard($cardId)
     {
-        if(auth()->user()->email == config('settings.admin_email')) {
-            dd($this->card);
-            $this->card->delete();
-        }
+        $this->dispatch('selectedCard', $cardId);
     }
 }

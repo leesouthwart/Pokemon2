@@ -15,6 +15,11 @@ class CardList extends Component
     public $search = '';
     public $sortField = 'id';
     public $sortDirection = 'asc';
+    public $selectedCards = [];
+
+    protected $listeners = [
+        'selectedCard' => 'handleSelectedCard',
+    ];
 
     public function render()
     {
@@ -42,5 +47,17 @@ class CardList extends Component
         }
 
         $this->sortField = $field;
+    }
+
+    public function handleSelectedCard($cardId)
+    {
+        $this->selectedCards[] = $cardId;
+    }
+
+    public function delete()
+    {
+        foreach($this->selectedCards as $card) {
+            Card::find($card)->delete();
+        }
     }
 }

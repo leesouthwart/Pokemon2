@@ -1,22 +1,26 @@
 
-<tr class="cursor-pointer" wire:click="selectCard">
-    <td class="py-4 pl-4">
+<tr class="cursor-pointer">    
+    <td class="pl-4">
+        <input type="checkbox" wire:click="emitSelectedCard({{ $card->id }})">
+    </td>
+
+    <td class="py-4 pl-4" wire:click="selectCard">
         <div class="flex items-center">
             <img src="{{$card->image_url}}" class="aspect-[4/5] h-20">
         </div>
     </td>
 
-    <td class="py-4 pl-4 pr-8 sm:pl-6 lg:pl-8">
+    <td class="py-4 pl-4 pr-8 sm:pl-6 lg:pl-8" wire:click="selectCard">
         <div class="flex items-center">
             <div class="truncate text-sm font-medium leading-6 text-white">{{$card->search_term}}</div>
         </div>
     </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8">
+    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
         <div class="flex gap-x-3">
             <div class="font-mono text-sm leading-6 text-gray-400">{{$currency->symbol}}{{$card->converted_price}}</div>
         </div>
     </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8">
+    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
         <div class="flex gap-x-3">
             <div class="font-mono text-sm leading-6 text-gray-400">
                 @if($psa10Prices[\App\Models\Region::GB] == 0)
@@ -27,7 +31,7 @@
             </div>
         </div>
     </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8">
+    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
         <div class="flex gap-x-3">
             <div class="font-mono text-sm leading-6 text-gray-400">
                 @if($psa10Prices[\App\Models\Region::GB] == 0)
@@ -38,7 +42,7 @@
             </div>
         </div>
     </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8">
+    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
         <div class="flex gap-x-3">
             <div class="font-mono text-sm leading-6 {{$roiLowestColor}}">
                 @if($rois[\App\Models\Region::GB] == 0)
