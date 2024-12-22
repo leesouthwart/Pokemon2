@@ -19,7 +19,8 @@ class Card extends Component
     public $averagePsa10Prices = [];
     public $rois = [];
 
-    public $listeners = ['cardUpdated'];
+    public $listeners = ['cardUpdated', 'unselect'];
+    public $selected = false;
 
 
     public function mount($card)
@@ -81,5 +82,10 @@ class Card extends Component
     public function emitSelectedCard($cardId)
     {
         $this->dispatch('selectedCard', $cardId);
+    }
+
+    public function unselect()
+    {
+        $this->selected = false;
     }
 }

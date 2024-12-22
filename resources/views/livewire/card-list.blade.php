@@ -6,7 +6,19 @@
         </div>
 
         @if(!empty($selectedCards))
-            <button class="bg-red-700 hover:bg-red-800 text-white font-bold px-4 rounded" wire:click="delete">Delete</button>
+            <div class="flex ml-auto">
+                <select class="rounded text-sm py-1.5 border-0" wire:model="selectedCardGroupId">
+                    <option disabled value="0">Select Group</option>
+                @foreach($groups as $cardGroup)
+                    <option value="{{ $cardGroup->id }}">{{ $cardGroup->name }}</option>
+                @endforeach
+                </select>
+
+                <button class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-4 rounded ml-2" wire:click="addToGroup">Add to group</button>
+            </div>
+
+
+            <button class="bg-red-700 hover:bg-red-800 text-white font-bold px-4 rounded ml-16 mr-3" wire:click="delete">Delete</button>
         @endif
     </div>
 

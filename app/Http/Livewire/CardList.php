@@ -5,7 +5,10 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 
 use App\Models\Card;
+use App\Models\CardGroup;
 use Livewire\WithPagination;
+use Flasher\Notyf\Prime\NotyfInterface;
+
 
 class CardList extends Component
 {
@@ -16,6 +19,8 @@ class CardList extends Component
     public $sortField = 'id';
     public $sortDirection = 'asc';
     public $selectedCards = [];
+    public $selectedCardGroupId = 0;
+    public $groups;
 
     protected $listeners = [
         'selectedCard' => 'handleSelectedCard',
@@ -23,6 +28,8 @@ class CardList extends Component
 
     public function render()
     {
+        $this->groups = CardGroup::all();
+
         $cards = Card::with('regionCards')
             ->where('search_term', 'like', '%' . $this->search . '%')
             ->join('region_cards', 'cards.id', '=', 'region_cards.card_id')
@@ -59,5 +66,24 @@ class CardList extends Component
         foreach($this->selectedCards as $card) {
             Card::find($card)->delete();
         }
+
+        $this->dispatch('success', count($this->selectedCards) .' cards successfully deleted');
     }
+
+    public function addToGroup()
+    {
+        $group = CardGroup::find($this->selectedCardGroupId);
+
+        if($group) {
+            foreach($this->selectedCards as $card) {
+                $group->cards()->attach($card);
+            }
+    
+            $this->selectedCards = [];
+            $this->dispatch('unselect');
+            $this->dispatch('success', 'Successfully added to group');
+        }
+    }
+
 }
+

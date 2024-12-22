@@ -1,7 +1,7 @@
 
 <tr class="cursor-pointer">    
     <td class="pl-4">
-        <input type="checkbox" wire:click="emitSelectedCard({{ $card->id }})">
+        <input wire:model="selected" type="checkbox" wire:click="emitSelectedCard({{ $card->id }})">
     </td>
 
     <td class="py-4 pl-4" wire:click="selectCard">
