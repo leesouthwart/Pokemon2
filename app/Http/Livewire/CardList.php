@@ -64,7 +64,11 @@ class CardList extends Component
     public function delete()
     {
         foreach($this->selectedCards as $card) {
-            Card::find($card)->delete();
+            $cardModel = Card::find($card);
+
+            if($cardModel) {
+                $cardModel->delete();
+            }
         }
 
         $this->dispatch('success', count($this->selectedCards) .' cards successfully deleted');

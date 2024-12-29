@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('convert:currency')->dailyAt('00:00');
         $schedule->command('get:access_token')->dailyAt('00:05')->withoutOverlapping();
+        $schedule->command('app:update-cards')->dailyAt('00:10')->withoutOverlapping();
     }
 
     /**

@@ -20,6 +20,9 @@ class Card extends Model
         'url',
         'price',
         'image_url',
+        'update_hold_until',
+        'last_checked',
+        'old_cr_price'
     ];
 
     public function regionCards()
