@@ -6,9 +6,11 @@ use App\Http\Controllers\BidController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\CardGroupController;
+use App\Http\Controllers\BuylistController;
 
 use App\Models\EbayProfile;
 use App\Models\OauthToken;
+use App\Models\Region;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;
@@ -44,59 +46,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/ebay-settings', [ProfileController::class, 'ebaySettingsUpdate'])->name('profile.ebay-settings.update');
 });
 
-//
-Route::get('test', function() {
-    $response = Http::withHeaders([
-        'X-EBAY-C-MARKETPLACE-ID' => 'EBAY_GB',
-        'Authorization' => 'Bearer ' . Cache::get('access_token')
-    ])->get('https://api.sandbox.ebay.com/buy/marketplace_insights/v1_beta/item_sales/search?q=iphone&category_ids=9355&limit=3');
-
-    dd($response->json());
-    return $response->json();
-});
-
-Route::get('test3', function() {
-    // FOR LIVE
-    $client = new \GuzzleHttp\Client();
-
-    $response = $client->request('GET', config('settings.scrape_ebay_url_base') . 'charizard+psa+10', [
-        'headers' => [
-            'accept' => 'application/json',
-        ],
-    ]);
-
-    $json = json_decode($response->getBody()->getContents(), true);
-    $jsonData = $json['result']['selectorElements'];
-
-    $dom = new DOMDocument();
-    $dom->loadHTML($jsonData[0]['htmlElements'][0]);
-    $xpath = new DOMXPath($dom);
-
-    $data = [
-        'price' => $xpath->evaluate("string(//span[contains(@class, 's-item__price')])")
-    ];
-
-    return $data;
-});
-
-
-Route::get('test2', function() {
-    \App\Jobs\CreateCard::dispatch('bulbasaur 337 promo', 'https://www.cardrush-pokemon.jp/product/38082');
-
-    dd('done');
-});
-
-
-
 Route::middleware(['currency.convert', 'auth'])->group(function () {
     Route::get('cardrush', [CardController::class, 'index'])->name('cardrush');
     Route::post('store_card', [CardController::class, 'store'])->name('card.store');
     Route::get('group', [CardGroupController::class, 'index'])->name('card_group.index');
-    Route::get('group/{id}', [CardGroupController::class, 'view'])->name('card_group.single');
+    Route::get('group/{card_group}', [CardGroupController::class, 'view'])->name('card_group.single');
 
     Route::get('upload', [BatchController::class, 'create'])->name('batch.create');
-});
 
+    Route::get('buylist', [BuylistController::class, 'index'])->name('buylist.index');
+    Route::get('buylist/{buylist}', [BuylistController::class, 'view'])->name('buylist.view');
+
+    
+});
 
 
 

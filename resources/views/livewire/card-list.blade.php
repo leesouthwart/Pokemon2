@@ -5,8 +5,13 @@
                 <input type="text" name="search_term" id="search" wire:model.live="search" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Search...">
         </div>
 
-        @if(!empty($selectedCards))
+        
             <div class="flex ml-auto">
+                
+                <livewire:make-me-money :groups="$groups"/>
+                
+
+                @if(!empty($selectedCards))
                 <select class="rounded text-sm py-1.5 border-0" wire:model="selectedCardGroupId">
                     <option disabled value="0">Select Group</option>
                 @foreach($groups as $cardGroup)
@@ -15,11 +20,12 @@
                 </select>
 
                 <button class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-4 rounded ml-2" wire:click="addToGroup">Add to group</button>
+                <button class="bg-red-700 hover:bg-red-800 text-white font-bold px-4 rounded ml-16 mr-3" wire:click="delete">Delete</button>
+                @endif
             </div>
 
 
-            <button class="bg-red-700 hover:bg-red-800 text-white font-bold px-4 rounded ml-16 mr-3" wire:click="delete">Delete</button>
-        @endif
+            
     </div>
 
     <table class="mt-6 w-full whitespace-nowrap text-left">

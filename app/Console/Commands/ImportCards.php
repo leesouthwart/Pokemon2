@@ -49,7 +49,7 @@ class ImportCards extends Command
                 continue;
             }
 
-            CreateCard::dispatch($searchTerm, $url);
+            CreateCard::dispatch($searchTerm, $url, $groups);
         }
 
         $this->info('All jobs have been dispatched successfully.');

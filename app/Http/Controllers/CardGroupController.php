@@ -14,8 +14,10 @@ class CardGroupController extends Controller
         ]);
     }
 
-    public function view()
+    public function view(CardGroup $cardGroup)
     {
-        return 'test for now';
+        return view('card_groups.view', [
+            'cardGroup' => $cardGroup
+        ]);
     }
 }

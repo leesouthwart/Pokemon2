@@ -29,7 +29,6 @@ class EbayService
 
         // @todo figure out a better way to always have PSA 10 in the search term WITHOUT saving it in DB (as this would change front end forms)
         $searchTermEbay = $searchTerm . ' PSA 10';
-
         $response = Http::withHeaders([
             'X-EBAY-C-MARKETPLACE-ID' => $region->ebay_marketplace_id,
             'X-EBAY-C-ENDUSERCTX' => $region->ebay_end_user_context,
@@ -55,7 +54,9 @@ class EbayService
             }
 
             $averageItemCardPrice = number_format($itemCardPrice / count($data['itemSummaries']), 2);
-            $lowestItemCardPrice = min(array_column($items, 'price'));
+            $lowestItemCardPrice = min(array_map(function($item) {
+                return floatval(str_replace(',', '', $item['price']));
+            }, $items));
 
         }
 

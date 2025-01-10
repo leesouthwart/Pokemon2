@@ -25,6 +25,8 @@ class Card extends Model
         'old_cr_price'
     ];
 
+    public $appends = ['roi'];
+
     public function regionCards()
     {
         return $this->hasMany(RegionCard::class);
@@ -76,12 +78,34 @@ class Card extends Model
         $dom->loadHTML($jsonData[0]['htmlElements'][0]);
         $xpath = new DOMXPath($dom);
 
+        $stock = $jsonData[2];
+        $inStock = false;
+       
+        if (array_key_exists('textNodes', $stock) && is_array($stock['textNodes']) && !empty($stock['textNodes'])) {
+            $stock = str_replace('在庫数 ', '', $stock['textNodes'][0]);
+            $stock = str_replace('枚', '', $stock);
+            $stock = str_replace('×', '', $stock);
+
+            if($stock && $stock > 0) {
+                $inStock = true;
+            }
+        }
+
         $data = [
             'cr_price' => str_replace('円', '', $jsonData[1]['textNodes'][0]),
-            'image_url' => $xpath->evaluate("string(//a/@href)")
+            'image_url' => $xpath->evaluate("string(//a/@href)"),
+            'stock' => $inStock
         ];
 
         return $data;
+    }
+
+    public function CardrushStockCheck()
+    {
+        $data = $this->getCardDataFromCr($this->url);
+        sleep(5); //self enforced anti-ban limit on scraper.
+
+        return $data['stock'];
     }
 
     public function getConvertedPriceAttribute($currency = null)
@@ -99,5 +123,12 @@ class Card extends Model
         $price = $intVal * $currency->convertFrom->where('id', Currency::JPY)->first()->pivot->conversion_rate;
 
         return number_format($price, 2, '.', '');
+    }
+
+    public function getRoiAttribute()
+    {
+        $cardRegion = RegionCard::where('card_id', $this->id)->where('region_id', 1)->first();
+
+        return $cardRegion->calcRoi($this->converted_price);
     }
 }
