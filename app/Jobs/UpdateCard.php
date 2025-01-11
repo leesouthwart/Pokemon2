@@ -57,6 +57,8 @@ class UpdateCard implements ShouldQueue
                 $card->update_hold_until = now()->addDays(14);
             }
 
+            $card->roi_average = $card->regionCards()->where('region_id', 1)->first()->calcRoi($card->converted_price);
+
             $card->save();
 
         } catch(\Exception $e) {

@@ -9,6 +9,8 @@ use App\Models\CardGroup;
 use Livewire\WithPagination;
 use Flasher\Notyf\Prime\NotyfInterface;
 
+use Illuminate\Support\Facades\DB;
+
 
 class CardList extends Component
 {
@@ -18,6 +20,7 @@ class CardList extends Component
     public $search = '';
     public $sortField = 'id';
     public $sortDirection = 'asc';
+    public $sortByCalcRoi = false;
     public $selectedCards = [];
     public $selectedCardGroupId = 0;
     public $groups;
@@ -31,23 +34,16 @@ class CardList extends Component
     {
         $this->groups = CardGroup::all();
 
-        if($this->cardGroup) {
-            $cards = $this->cardGroup->cards()->with('regionCards')
-                ->where('search_term', 'like', '%' . $this->search . '%')
-                ->join('region_cards', 'cards.id', '=', 'region_cards.card_id')
-                ->orderBy($this->sortField, $this->sortDirection)
-                ->select('cards.*') // Ensure only card fields are selected
-                ->paginate(20);
-        } else {
-            $cards = Card::with('regionCards')
+        $cardsQuery = $this->cardGroup ? $this->cardGroup->cards() : Card::query();
+
+        $cards = $cardsQuery
+            ->with('regionCards')
             ->where('search_term', 'like', '%' . $this->search . '%')
             ->join('region_cards', 'cards.id', '=', 'region_cards.card_id')
             ->orderBy($this->sortField, $this->sortDirection)
-            ->select('cards.*') // Ensure only card fields are selected
+            ->select('cards.*')
             ->paginate(20);
-        }
-        
-        
+              
 
         return view('livewire.card-list', [
             'cardList' => $cards,

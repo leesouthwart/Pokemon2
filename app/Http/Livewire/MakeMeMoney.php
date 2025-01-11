@@ -89,11 +89,6 @@ class MakeMeMoney extends Component
             }
         }
 
-        // loop selectedGroups and sum the 'amount'
-        // if it is less than $this->total then get cards from the rest of the groups
-
-        
-
         if($totalOfSelectedGroups < $this->total) {
             $remaining = $this->total - $totalOfSelectedGroups;
             $selectedGroupIds = array_column($this->selectedGroups, 'id');
