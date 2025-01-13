@@ -5,7 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use App\Models\Card;
 use App\Models\Buylist;
-use App\Jobs\AddCardToBuyList;
+use App\Jobs\AddCardToBuylist;
 
 class MakeMeMoney extends Component
 {
@@ -84,7 +84,7 @@ class MakeMeMoney extends Component
 
             $cardIndex = 0;
             foreach($randomCards as $card) {
-                dispatch(new AddCardToBuyList($card, $this->buylist, $groupData['amount'], $groupData['id'], $cardIndex == count($randomCards) - 1));
+                dispatch(new AddCardToBuylist($card, $this->buylist, $groupData['amount'], $groupData['id'], $cardIndex == count($randomCards) - 1));
                 $cardIndex++;
             }
         }
@@ -107,7 +107,7 @@ class MakeMeMoney extends Component
 
             $cardIndex = 0;
             foreach($randomCards as $card) {
-                dispatch(new AddCardToBuyList($card, $this->buylist, $remaining, null, $cardIndex == count($randomCards) - 1));
+                dispatch(new AddCardToBuylist($card, $this->buylist, $remaining, null, $cardIndex == count($randomCards) - 1));
                 $cardIndex++;
             }
         }
