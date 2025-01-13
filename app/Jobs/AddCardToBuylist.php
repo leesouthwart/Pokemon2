@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 
 use App\Models\Card;
 use App\Models\Buylist;
-use App\Events\ProcessingBuylistCard;
+use App\Events\ProcessingBuyListCard;
 use App\Events\CardSuccessfullyAddedToBuylist;
 use App\Events\BuylistCardGroupCompleted;
 
@@ -50,7 +50,7 @@ class AddCardToBuylist implements ShouldQueue
             return;
         }
 
-        event(new ProcessingBuylistCard($this->card));
+        event(new ProcessingBuyListCard($this->card));
 
         $card = Card::find($this->card['id']);
         $inStock = $card->CardrushStockCheck();
