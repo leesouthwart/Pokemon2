@@ -51,6 +51,7 @@ class MakeMeMoney extends Component
         $stockChecked = [];
         $cardList = [];
         $this->progress = 0;
+        $totalOfSelectedGroups = 0;
         $totalOfSelectedGroups = array_sum(array_column($this->selectedGroups, 'amount'));
 
         $this->buylist = Buylist::create([
