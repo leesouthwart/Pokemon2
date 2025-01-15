@@ -42,6 +42,7 @@ class ImportCards extends Command
         foreach ($csv as $record) {
             $searchTerm = $record[0];
             $url = $record[1];
+            $groups = isset($record[2]) ? $record[2] : '';
 
             // Dispatch the job
             if(!$searchTerm || !$url) {
