@@ -62,9 +62,16 @@ class CreateCard implements ShouldQueue
                     $card->image_url = $data['image_url'];
                     $card->save();
 
-                    // if $this->groups is not empty, turn the comma separated string into an array
-                    
-
+                    if (
+                        $card->cr_price < 700
+                        || $card->cr_price > 27500
+                    ) {
+                        $card->last_checked = now();
+                        $card->update_hold_until = now()->addDays(90);
+                    } else {
+                        $card->last_checked = now();
+                        $card->update_hold_until = now()->addDays(31);
+                    }
                 } else {
                     $card = $existingCard;
                 }
