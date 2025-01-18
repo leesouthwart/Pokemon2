@@ -18,8 +18,8 @@ class CardList extends Component
     use withPagination;
 
     public $search = '';
-    public $sortField = 'id';
-    public $sortDirection = 'asc';
+    public $sortField = 'roi_average';
+    public $sortDirection = 'desc';
     public $sortByCalcRoi = false;
     public $selectedCards = [];
     public $selectedCardGroupId = 0;
