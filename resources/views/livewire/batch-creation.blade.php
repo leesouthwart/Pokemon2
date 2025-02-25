@@ -28,7 +28,7 @@
             <div>
                 @if($listings)
                     @foreach($listings as $listing)
-                        <livewire:batch-listing :listing="$listing" wire:key="{{$listing->id}}" />
+                        <livewire:batch-listing :listing="$listing" wire:key="{{$this->parentKey}}-{{$listing->id}}" />
                     @endforeach
                 @endif
 

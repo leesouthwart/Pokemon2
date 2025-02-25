@@ -1,6 +1,6 @@
 <div class="flex {{$price == '-0.05' ? 'bg-red-300' : ''}}">
     <div class="w-full m-2">
-        <input class="w-full" type="text" wire:model.live="title" value="{{$listing->title}}">
+        <input class="w-full" type="text" wire:model.live="title">
     </div>
 
     <div class="w-1/3 m-2">

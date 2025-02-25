@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use App\Exports\EbayListingExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Livewire\Attributes\Computed;
+
+use Illuminate\Support\Str;
 
 class BatchCreation extends Component
 {
@@ -25,7 +28,7 @@ class BatchCreation extends Component
 
     public function mount()
     {
-        $this->batch = \App\Models\Batch::find(62);
+        //$this->batch = \App\Models\Batch::find(62);
         $this->listings = $this->batch->ebayListings ?? null;
     }
 
@@ -68,5 +71,12 @@ class BatchCreation extends Component
     public function export()
     {
         return Excel::download(new EbayListingExport($this->batch), 'listings.xlsx');
+    }
+
+
+    #[Computed] 
+    public function parentKey()
+    {
+        return Str::random(6);
     }
 }
