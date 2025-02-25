@@ -57,6 +57,6 @@ class RegionCard extends Model
         // ROI formula: ((Final Value - Initial Value) / Initial Value) * 100
         $roi = (($afterFees - $initialPrice) / $initialPrice) * 100;
 
-        return number_format($roi, 2);
+        return str_replace(',', '', number_format($roi, 2));
     }
 }
