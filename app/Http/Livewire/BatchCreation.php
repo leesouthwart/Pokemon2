@@ -29,7 +29,7 @@ class BatchCreation extends Component
 
     public function mount()
     {
-        $this->batch = \App\Models\Batch::find(98);
+        //$this->batch = \App\Models\Batch::find(98);
         $this->listings = $this->batch->ebayListings ?? null;
     }
 
@@ -62,7 +62,7 @@ class BatchCreation extends Component
     public function handleListingDone()
     {
         // Refresh the listings
-        $this->listings = $this->batch->ebayListings;
+        $this->listings = $this->batch?->ebayListings;
 
         if(Queue::size() == 0) {
             $this->loading = false;
