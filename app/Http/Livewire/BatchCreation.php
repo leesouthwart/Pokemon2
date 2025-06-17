@@ -24,12 +24,12 @@ class BatchCreation extends Component
     public bool $useList = false;
     public string $list = '';
     public bool $psa_api_expired = false;
-
+    public float $calculatedTotal = 0;
     protected $listeners = ['echo:jobs,JobCompleted' => 'handleListingDone'];
 
     public function mount()
     {
-        //$this->batch = \App\Models\Batch::find(98);
+        $this->batch = \App\Models\Batch::find(98);
         $this->listings = $this->batch->ebayListings ?? null;
     }
 
@@ -76,6 +76,7 @@ class BatchCreation extends Component
 
     public function export()
     {
+        $this->calculatedTotal = $this->batch->ebayListings->sum('price');
         return Excel::download(new EbayListingExport($this->batch), 'listings.xlsx');
     }
 

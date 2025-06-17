@@ -71,6 +71,13 @@
             <div class="bg-gray-800 text-gray-300 flex flex-col items-center justify-center my-8">
                 <button wire:click="export" class="btn bg-blue-600 text-white px-32 py-4 mx-auto">Export</button>
             </div>
+
+
+            @if($calculatedTotal)
+                <div class="bg-gray-800 text-gray-300 flex flex-col items-center justify-center my-8">
+                    <p>Total Value: £{{ number_format($calculatedTotal, 2) }}</p>
+                </div>
+            @endif
         </div>
 
     </div>
