@@ -21,8 +21,7 @@ class CreateEbayListing implements ShouldQueue
     public $batch;
     public $ebayService;
 
-    public $tries = 10;
-    public $retryAfter = 180;
+    public $tries = 1;
 
     /**
      * Create a new job instance.
@@ -44,7 +43,17 @@ class CreateEbayListing implements ShouldQueue
      */
     public function handle()
     {
-        $data = $this->service->getPsaCardData($this->cert);
+        if (\Cache::get('psa_api_expired')) {
+            event(new JobCompleted());
+            return;
+        }
+
+        try {
+            $data = $this->service->getPsaCardData($this->cert);
+        } catch (\Exception $e) {
+            \Cache::put('psa_api_expired', true);
+            throw $e;
+        }
 
         // Check for existing EbayListing - increase quantity if found.
         $existing = EbayListing::filterDupes($this->batch->id, $data['title'])->first();

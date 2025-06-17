@@ -23,12 +23,13 @@ class BatchCreation extends Component
     public bool $loading = false;
     public bool $useList = false;
     public string $list = '';
+    public bool $psa_api_expired = false;
 
     protected $listeners = ['echo:jobs,JobCompleted' => 'handleListingDone'];
 
     public function mount()
     {
-        //$this->batch = \App\Models\Batch::find(62);
+        //$this->batch = \App\Models\Batch::find(98);
         $this->listings = $this->batch->ebayListings ?? null;
     }
 
@@ -65,6 +66,11 @@ class BatchCreation extends Component
 
         if(Queue::size() == 0) {
             $this->loading = false;
+        }
+
+        if (\Cache::get('psa_api_expired')) {
+            $this->loading = false;
+            $this->psa_api_expired = true;
         }
     }
 

@@ -41,6 +41,12 @@
                         <span class="sr-only">Loading...</span>
                     </div>
                 @endif
+
+                @if($psa_api_expired)
+                    <div class="bg-red-500 text-white p-4 rounded-md mx-4">
+                        <p>PSA API limit has been reached. Please try again later.</p>
+                    </div>
+                @endif
             </div>
         @endif
     </div>
