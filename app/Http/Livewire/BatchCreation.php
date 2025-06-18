@@ -27,9 +27,9 @@ class BatchCreation extends Component
     public float $calculatedTotal = 0;
     protected $listeners = ['echo:jobs,JobCompleted' => 'handleListingDone'];
 
-    public function mount()
+    public function mount($batch = null)
     {
-        //$this->batch = \App\Models\Batch::find(98);
+        $this->batch = $batch;
         $this->listings = $this->batch->ebayListings ?? null;
     }
 

@@ -53,6 +53,8 @@ Route::middleware(['currency.convert', 'auth'])->group(function () {
     Route::get('group/{card_group}', [CardGroupController::class, 'view'])->name('card_group.single');
 
     Route::get('upload', [BatchController::class, 'create'])->name('batch.create');
+    Route::get('batches', [BatchController::class, 'index'])->name('batch.index');
+    Route::get('batches/{batch}', [BatchController::class, 'view'])->name('batch.view');
 
     Route::get('buylist', [BuylistController::class, 'index'])->name('buylist.index');
     Route::get('buylist/{buylist}', [BuylistController::class, 'view'])->name('buylist.view');

@@ -22,6 +22,10 @@
             <div class="button_container">
                 <button type="button" wire:click="$toggle('useList')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-5">List format</button>
             </div>
+
+            <div class="button_container ml-5">
+                <a href="{{ route('batch.index') }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">View Previous Batches</a>
+            </div>
         </div>
 
         @if($batch)
@@ -72,6 +76,9 @@
                 <button wire:click="export" class="btn bg-blue-600 text-white px-32 py-4 mx-auto">Export</button>
             </div>
 
+            <div class="bg-gray-800 text-gray-300 flex flex-col items-center justify-center my-4">
+                <a href="{{ route('batch.create') }}" class="btn bg-orange-600 hover:bg-orange-700 text-white px-32 py-4 mx-auto">Start Fresh</a>
+            </div>
 
             @if($calculatedTotal)
                 <div class="bg-gray-800 text-gray-300 flex flex-col items-center justify-center my-8">
