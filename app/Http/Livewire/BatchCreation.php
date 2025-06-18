@@ -41,7 +41,8 @@ class BatchCreation extends Component
     public function submit()
     {
         $this->batch = \App\Models\Batch::create([
-            'name' => Carbon::now() . '_' . uniqid()
+            'name' => Carbon::now() . '_' . uniqid(),
+            'user_id' => auth()->id()
         ]);
 
         $this->loading = true;
