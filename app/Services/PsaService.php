@@ -142,8 +142,7 @@ class PsaService
         // Pedigree matching
         $finalString .= match ($pedigree) {
             'REVERSE HOLO' => ' Reverse Holo',
-            'MASTER BALL REVERSE HOLO' => ' Master Ball Reverse',
-            'ART RARE' => ' AR',
+            'MASTER BALL REVERSE HOLO' => ' Master Ball Reverse'
             default => '',
         };
 
