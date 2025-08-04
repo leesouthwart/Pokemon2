@@ -23,6 +23,17 @@
     <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
         <div class="flex gap-x-3">
             <div class="font-mono text-sm leading-6 text-gray-400">
+                @if($bidPrice === null)
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                @else
+                    ${{ number_format($bidPrice, 2) }}
+                @endif
+            </div>
+        </div>
+    </td>
+    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
+        <div class="flex gap-x-3">
+            <div class="font-mono text-sm leading-6 text-gray-400">
                 @if($psa10Prices[\App\Models\Region::GB] == 0)
                     <i class="fas fa-exclamation-triangle text-red-500"></i>
                 @else

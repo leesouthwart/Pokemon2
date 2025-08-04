@@ -22,6 +22,8 @@ class Card extends Component
     public $listeners = ['cardUpdated', 'unselect'];
     public $selected = false;
 
+    public $bidPrice;
+
 
     public function mount($card)
     {
@@ -29,7 +31,7 @@ class Card extends Component
         $this->searchTerm = $this->card->search_term;
         $this->setUpPrices();
         $this->calculateColours();
-
+        $this->calculateBidPrice();
     }
     public function render()
     {
@@ -77,6 +79,39 @@ class Card extends Component
         $this->rois[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->calcRoi($this->card->converted_price);
     }
 
+    public function calculateBidPrice()
+    {
+        // Get the raw price from the card
+        $rawPrice = $this->card->converted_price ?? null;
+        
+        // If no raw price, set bid price to null
+        if ($rawPrice === null) {
+            $this->bidPrice = null;
+            return;
+        }
+        
+        // Add the user's grading cost
+        $user = auth()->user();
+        $gradingCost = $user ? $user->grading_cost : 12.5; // Default to 12.5 if no user
+        $totalPrice = $rawPrice + $gradingCost;
+        
+        // Convert to USD using currency conversion
+        $gbpCurrency = \App\Models\Currency::find(\App\Models\Currency::GBP);
+        $usdCurrency = \App\Models\Currency::find(\App\Models\Currency::USD);
+        
+        if ($gbpCurrency && $usdCurrency) {
+            $conversion = $gbpCurrency->convertTo()->where('currency_id_2', \App\Models\Currency::USD)->first();
+            if ($conversion) {
+                $this->bidPrice = $totalPrice * $conversion->pivot->conversion_rate;
+                
+            } else {
+                $this->bidPrice = null; // Fallback to null if conversion not found
+            }
+        } else {
+            $this->bidPrice = null; // Fallback to null if currencies not found
+        }
+    }
+
    
     public function emitSelectedCard($cardId)
     {
@@ -87,4 +122,6 @@ class Card extends Component
     {
         $this->selected = false;
     }
+
+    
 }
