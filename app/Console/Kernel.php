@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('get:access_token')->dailyAt('00:05')->withoutOverlapping();
         $schedule->command('app:update-cards')->dailyAt('00:30')->withoutOverlapping();
         $schedule->command('psa:reset-expired')->hourly();
+        $schedule->command('app:test-logs')->everyMinute()->withoutOverlapping();
     }
 
     /**
