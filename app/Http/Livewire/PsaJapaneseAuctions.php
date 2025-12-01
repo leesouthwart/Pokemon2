@@ -45,7 +45,6 @@ class PsaJapaneseAuctions extends Component
                 // Log if no listings returned (for debugging)
                 if (empty($apiListings)) {
                     \Log::info('getPsaJapanesePsa10Auctions returned empty array', [
-                        'use_dummy_listings' => config('ebay.use_dummy_listings'),
                         'environment' => app()->environment(),
                     ]);
                 }

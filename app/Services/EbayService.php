@@ -163,11 +163,6 @@ class EbayService
      */
     public function getPsaJapanesePsa10Auctions()
     {
-        // If using dummy listings, return simple sandbox results
-        if (config('ebay.use_dummy_listings')) {
-            return $this->getDummyListings();
-        }
-
         // Check if access token is available
         if (!$this->accessToken) {
             Log::error('No access token available for eBay API call');
@@ -284,82 +279,6 @@ class EbayService
                     }
                 } else {
                     continue; // Skip if no end date
-                }
-
-                // Get current bid price or starting price if no bids yet
-                $currentBid = 0;
-                $currency = 'USD';
-                
-                // Check for current bid price first
-                if (isset($item['currentBidPrice']['value'])) {
-                    $currentBid = $item['currentBidPrice']['value'];
-                    $currency = $item['currentBidPrice']['currency'] ?? 'USD';
-                } elseif (isset($item['price']['value'])) {
-                    // Fall back to price field (which may be starting price if no bids)
-                    $currentBid = $item['price']['value'];
-                    $currency = $item['price']['currency'] ?? 'USD';
-                } elseif (isset($item['startingPrice']['value'])) {
-                    // Fall back to starting price
-                    $currentBid = $item['startingPrice']['value'];
-                    $currency = $item['startingPrice']['currency'] ?? 'USD';
-                }
-
-                $listings[] = [
-                    'itemId' => $item['itemId'] ?? '',
-                    'title' => $item['title'] ?? '',
-                    'image' => $item['image']['imageUrl'] ?? '',
-                    'currentBid' => $currentBid,
-                    'currency' => $currency,
-                    'url' => $item['itemWebUrl'] ?? '',
-                    'endDate' => $item['itemEndDate'] ?? '',
-                ];
-            }
-        }
-
-        return $listings;
-    }
-
-    /**
-     * Get dummy listings from eBay sandbox for testing
-     */
-    private function getDummyListings()
-    {
-        // Find US region by marketplace ID
-        $region = Region::where('ebay_marketplace_id', 'EBAY_US')->first();
-        
-        if (!$region) {
-            return [];
-        }
-
-        // Use sandbox endpoint - fetch more results to ensure we get 10 auctions
-        // Note: Sandbox may not support the same filter syntax, so we filter in code
-        $url = 'https://api.sandbox.ebay.com/buy/browse/v1/item_summary/search';
-        $queryParams = http_build_query([
-            'q' => 'phone',
-            'limit' => 200, // Fetch more to ensure we get enough auctions
-            'sort' => 'endingSoonest',
-            'filter' => 'buyingOptions:{AUCTION}',
-        ]);
-
-        $response = Http::withHeaders([
-            'X-EBAY-C-MARKETPLACE-ID' => $region->ebay_marketplace_id,
-            'X-EBAY-C-ENDUSERCTX' => $region->ebay_end_user_context,
-            'Authorization' => 'Bearer ' . $this->accessToken,
-        ])->get($url . '?' . $queryParams);
-
-        $data = $response->json();
-        $listings = [];
-
-        if (isset($data['itemSummaries'])) {
-            foreach ($data['itemSummaries'] as $item) {
-                // Only include auctions - filter in code since sandbox filter syntax may differ
-                // if (!isset($item['buyingOptions']) || !in_array('AUCTION', $item['buyingOptions'])) {
-                //     continue;
-                // }
-
-                // Stop once we have 10 auctions
-                if (count($listings) >= 10) {
-                    break;
                 }
 
                 // Get current bid price or starting price if no bids yet
