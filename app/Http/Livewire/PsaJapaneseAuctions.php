@@ -42,6 +42,14 @@ class PsaJapaneseAuctions extends Component
                 $ebayService = new EbayService();
                 $apiListings = $ebayService->getPsaJapanesePsa10Auctions();
                 
+                // Log if no listings returned (for debugging)
+                if (empty($apiListings)) {
+                    \Log::info('getPsaJapanesePsa10Auctions returned empty array', [
+                        'use_dummy_listings' => config('ebay.use_dummy_listings'),
+                        'environment' => app()->environment(),
+                    ]);
+                }
+                
                 // Get all pending bid item IDs for comparison
                 $pendingBidItemIds = PendingBid::pluck('ebay_item_id')->toArray();
                 

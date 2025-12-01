@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Services\AccessTokenService;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use App\Models\Card;
 use App\Models\Region;
 use App\Models\RegionCard;
@@ -167,10 +168,17 @@ class EbayService
             return $this->getDummyListings();
         }
 
+        // Check if access token is available
+        if (!$this->accessToken) {
+            Log::error('No access token available for eBay API call');
+            return [];
+        }
+
         // Find US region by marketplace ID
         $region = Region::where('ebay_marketplace_id', 'EBAY_US')->first();
         
         if (!$region) {
+            Log::error('US region not found in database');
             return [];
         }
 
@@ -189,11 +197,23 @@ class EbayService
         $seenItemIds = []; // Track item IDs to avoid duplicates
         
         foreach ($searchTerms as $searchTerm) {
+            // Build filter - try with seller filter first, but it might not work in all cases
+            $filter = 'buyingOptions:{AUCTION}';
+            // Note: Seller filter might cause issues if seller doesn't exist or filter syntax is wrong
+            // Uncomment if you want to filter by seller: 
+            $filter .= ',sellers:{psa}';
+            
             $queryParams = http_build_query([
                 'q' => $searchTerm,
                 'limit' => 200,
                 'sort' => 'endingSoonest',
-                'filter' => 'buyingOptions:{AUCTION},sellers:{psa}', // Filter for auctions only
+                'filter' => $filter,
+            ]);
+            
+            Log::info('eBay API search request', [
+                'search_term' => $searchTerm,
+                'filter' => $filter,
+                'url' => $url,
             ]);
             
             $response = Http::withHeaders([
@@ -202,7 +222,27 @@ class EbayService
                 'Authorization' => 'Bearer ' . $this->accessToken,
             ])->get($url . '?' . $queryParams);
 
+            // Check for HTTP errors
+            if (!$response->successful()) {
+                Log::error('eBay API error in getPsaJapanesePsa10Auctions', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'search_term' => $searchTerm,
+                    'url' => $url . '?' . $queryParams,
+                ]);
+                continue; // Skip this search term and try the next one
+            }
+
             $data = $response->json();
+            
+            // Check for API-level errors in response
+            if (isset($data['errors'])) {
+                Log::error('eBay API returned errors', [
+                    'errors' => $data['errors'],
+                    'search_term' => $searchTerm,
+                ]);
+                continue; // Skip this search term and try the next one
+            }
             
             // Collect item summaries, avoiding duplicates
             if (isset($data['itemSummaries'])) {
