@@ -163,20 +163,10 @@ class EbayService
      */
     public function getPsaJapanesePsa10Auctions()
     {
-        // Check if access token is available
-        if (!$this->accessToken) {
-            Log::error('No access token available for eBay API call');
-            return [];
-        }
-
+        
         // Find US region by marketplace ID
         $region = Region::where('ebay_marketplace_id', 'EBAY_US')->first();
         
-        if (!$region) {
-            Log::error('US region not found in database');
-            return [];
-        }
-
         // Build URL with query parameters
         // Note: eBay Browse API filter syntax uses comma-separated values
         $url = 'https://api.ebay.com/buy/browse/v1/item_summary/search';
@@ -204,13 +194,7 @@ class EbayService
                 'sort' => 'endingSoonest',
                 'filter' => $filter,
             ]);
-            
-            Log::info('eBay API search request', [
-                'search_term' => $searchTerm,
-                'filter' => $filter,
-                'url' => $url,
-            ]);
-            
+               
             $response = Http::withHeaders([
                 'X-EBAY-C-MARKETPLACE-ID' => $region->ebay_marketplace_id,
                 'X-EBAY-C-ENDUSERCTX' => $region->ebay_end_user_context,
@@ -229,16 +213,7 @@ class EbayService
             }
 
             $data = $response->json();
-            
-            // Check for API-level errors in response
-            if (isset($data['errors'])) {
-                Log::error('eBay API returned errors', [
-                    'errors' => $data['errors'],
-                    'search_term' => $searchTerm,
-                ]);
-                continue; // Skip this search term and try the next one
-            }
-            
+                      
             // Collect item summaries, avoiding duplicates
             if (isset($data['itemSummaries'])) {
                 foreach ($data['itemSummaries'] as $item) {

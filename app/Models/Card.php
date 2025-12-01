@@ -188,13 +188,26 @@ class Card extends Model
         $usdPrice = $intVal * $conversion->pivot->conversion_rate;
 
         // Get user grading cost (for user with email leesouthwart@gmail.com)
+        // Note: grading_cost is stored in GBP, so we need to convert to USD
         $user = User::where('email', 'leesouthwart@gmail.com')->first();
-        $gradingCost = $user && $user->grading_cost ? (float)$user->grading_cost : 0;
+        $gradingCostGbp = $user && $user->grading_cost ? (float)$user->grading_cost : 0;
+        
+        // Convert grading cost from GBP to USD
+        $gradingCostUsd = 0;
+        if ($gradingCostGbp > 0) {
+            $gbpCurrency = Currency::find(Currency::GBP);
+            if ($gbpCurrency) {
+                $gbpToUsdConversion = $gbpCurrency->convertTo()->where('currency_id_2', Currency::USD)->first();
+                if ($gbpToUsdConversion && $gbpToUsdConversion->pivot) {
+                    $gradingCostUsd = $gradingCostGbp * $gbpToUsdConversion->pivot->conversion_rate;
+                }
+            }
+        }
 
         // Get card additional bid (default is 1)
         $additionalBid = $this->additional_bid ?? 1;
 
-        // Calculate: cr_price (USD) + user grading_cost + card additional_bid
-        return round($usdPrice + $gradingCost + $additionalBid, 2);
+        // Calculate: cr_price (USD) + user grading_cost (converted to USD) + card additional_bid
+        return round($usdPrice + $gradingCostUsd + $additionalBid, 2);
     }
 }

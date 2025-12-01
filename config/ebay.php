@@ -19,7 +19,6 @@ return [
         ],
     'oauth_authorize_url_local' => 'https://auth.sandbox.ebay.com/oauth2/authorize',
     'oauth_authorize_url_production' => 'https://auth.ebay.com/oauth2/authorize',
-    'use_dummy_listings' => env('EBAY_USE_DUMMY_LISTINGS', true),
     'scopes' => [
         'identity' => [
             'https://api.ebay.com/oauth/api_scope/commerce.identity.readonly',
