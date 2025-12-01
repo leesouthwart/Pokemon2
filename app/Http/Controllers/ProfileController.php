@@ -76,4 +76,25 @@ class ProfileController extends Controller
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
+
+    /**
+     * Add balance to user's account
+     */
+    public function addBalance(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'amount' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $user = $request->user();
+        $amount = (float)$request->input('amount');
+        
+        $user->balance += $amount;
+        $user->save();
+
+        return Redirect::route('profile.edit')
+            ->with('status', 'balance-added')
+            ->with('balance_added', $amount)
+            ->with('new_balance', $user->balance);
+    }
 }

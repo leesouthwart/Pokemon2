@@ -16,5 +16,27 @@ return [
         'production' => [
             'identity' => 'https://apiz.ebay.com/commerce/identity/v1/user/'
         ]
-    ]
+        ],
+    'oauth_authorize_url_local' => 'https://auth.sandbox.ebay.com/oauth2/authorize',
+    'oauth_authorize_url_production' => 'https://auth.ebay.com/oauth2/authorize',
+    'use_dummy_listings' => env('EBAY_USE_DUMMY_LISTINGS', true),
+    'scopes' => [
+        'identity' => [
+            'https://api.ebay.com/oauth/api_scope/commerce.identity.readonly',
+            'https://api.ebay.com/oauth/api_scope/commerce.identity.email.readonly',
+            'https://api.ebay.com/oauth/api_scope/commerce.identity.phone.readonly',
+            'https://api.ebay.com/oauth/api_scope/commerce.identity.address.readonly',
+            'https://api.ebay.com/oauth/api_scope/commerce.identity.name.readonly',
+            'https://api.ebay.com/oauth/api_scope/commerce.identity.status.readonly',
+        ],
+        // 'buy' => [
+        //     'https://api.ebay.com/oauth/api_scope/buy.offer.auction',
+        // ],
+        'sell' => [
+            'https://api.ebay.com/oauth/api_scope/sell.inventory', // For createOrReplaceInventoryItem
+            'https://api.ebay.com/oauth/api_scope/sell.inventory.readonly', // For getInventoryItem
+            'https://api.ebay.com/oauth/api_scope/sell.account', // For creating/updating policies
+            'https://api.ebay.com/oauth/api_scope/sell.account.readonly', // For reading policies
+        ],
+    ],
 ];

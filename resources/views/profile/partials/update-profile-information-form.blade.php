@@ -47,6 +47,15 @@
             @endif
         </div>
 
+        <div>
+            <x-input-label for="balance" :value="__('Balance')" />
+            <x-text-input id="balance" name="balance" type="number" class="mt-1 block w-full" :value="old('balance', $user->balance ?? 0)" min="0" step="1" />
+            <x-input-error class="mt-2" :messages="$errors->get('balance')" />
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                {{ __('Your account balance.') }}
+            </p>
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

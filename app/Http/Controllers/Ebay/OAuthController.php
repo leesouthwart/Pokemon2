@@ -62,4 +62,25 @@ class OAuthController extends Controller
         return redirect('dashboard');
     }
 
+    public function redirectToEbay()
+    {
+        // Build space-separated scope string from identity, buy, and sell scopes
+        $identityScopes = config('ebay.scopes.identity', []);
+        $buyScopes = config('ebay.scopes.buy', []);
+        $sellScopes = config('ebay.scopes.sell', []);
+        $allScopes = array_merge($identityScopes, $buyScopes, $sellScopes);
+        $scopeString = implode(' ', $allScopes);
+
+        $params = http_build_query([
+            'client_id' => config('ebay.app_id'),
+            'redirect_uri' => config('ebay.ruName'),
+            'response_type' => 'code',
+            'scope' => $scopeString,
+            'state' => csrf_token(),
+        ], '', '&', PHP_QUERY_RFC3986);
+
+        
+
+        return redirect(config('ebay.oauth_authorize_url_' . env('APP_ENV')) . '?' . $params);
+    }
 }

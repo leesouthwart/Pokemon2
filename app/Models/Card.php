@@ -17,6 +17,9 @@ class Card extends Model
 
     public $fillable = [
         'search_term',
+        'psa_title',
+        'excluded_from_sniping',
+        'additional_bid',
         'url',
         'price',
         'image_url',
@@ -130,5 +133,68 @@ class Card extends Model
         $cardRegion = RegionCard::where('card_id', $this->id)->where('region_id', 1)->first();
 
         return $cardRegion->calcRoi($this->converted_price);
+    }
+
+    /**
+     * Find a card by matching PSA title with eBay listing title
+     * 
+     * @param string $ebayTitle The title from an eBay listing
+     * @return Card|null
+     */
+    public static function findByPsaTitle($ebayTitle)
+    {
+        if (empty($ebayTitle)) {
+            return null;
+        }
+
+        $ebayTitleLower = strtolower($ebayTitle);
+
+        // Search for cards where the PSA title is contained in the eBay title (case-insensitive)
+        return static::whereNotNull('psa_title')
+            ->where('excluded_from_sniping', false)
+            ->get()
+            ->first(function ($card) use ($ebayTitleLower) {
+                $psaTitleLower = strtolower($card->psa_title);
+                return strpos($ebayTitleLower, $psaTitleLower) !== false;
+            });
+    }
+
+    /**
+     * Calculate the bid price: CR price converted to USD + user grading_cost + card additional_bid
+     * 
+     * @return float
+     */
+    public function getBidPrice()
+    {
+        if (!$this->cr_price) {
+            return 0;
+        }
+
+        // Get USD currency
+        $usdCurrency = Currency::find(Currency::USD);
+        if (!$usdCurrency) {
+            return 0;
+        }
+
+        // Convert CR price (JPY) to USD using the same method as getConvertedPriceAttribute
+        $intVal = intval(str_replace(',', '', $this->cr_price));
+        
+        // Use convertFrom relationship to get conversion rate from JPY to USD
+        $conversion = $usdCurrency->convertFrom->where('id', Currency::JPY)->first();
+        if (!$conversion || !$conversion->pivot) {
+            return 0;
+        }
+
+        $usdPrice = $intVal * $conversion->pivot->conversion_rate;
+
+        // Get user grading cost (for user with email leesouthwart@gmail.com)
+        $user = User::where('email', 'leesouthwart@gmail.com')->first();
+        $gradingCost = $user && $user->grading_cost ? (float)$user->grading_cost : 0;
+
+        // Get card additional bid (default is 1)
+        $additionalBid = $this->additional_bid ?? 1;
+
+        // Calculate: cr_price (USD) + user grading_cost + card additional_bid
+        return round($usdPrice + $gradingCost + $additionalBid, 2);
     }
 }

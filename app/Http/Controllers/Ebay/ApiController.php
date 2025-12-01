@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Ebay;
 
 use App\Http\Controllers\Controller;
+use App\Services\EbayService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 
 class ApiController extends Controller
@@ -21,5 +23,65 @@ class ApiController extends Controller
 
 
         dd($response->body());
+    }
+
+    /**
+     * Create an eBay auction listing on sandbox
+     */
+    public function createAuctionListing(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!$user || !$user->oauth) {
+            return back()->with('error', 'You must be logged in and connected to eBay to create listings.');
+        }
+
+        $ebayService = new EbayService();
+        $result = $ebayService->createAuctionListing(
+            $user->oauth->token,
+            $request->input('title', 'Test Auction Item'),
+            $request->input('description', 'This is a test auction listing created via API'),
+            $request->input('starting_price', 9.99),
+            $request->input('duration', 'GTC')
+        );
+
+        if ($result['success']) {
+            $message = 'Auction listing created successfully!';
+            if (isset($result['listing_url'])) {
+                $message .= $result['listing_url'];
+            } else {
+                $message .= ' Listing ID: ' . ($result['listing_id'] ?? 'N/A');
+            }
+            return back()->with('message', $message);
+        } else {
+            return back()->with('error', 'Failed to create listing: ' . ($result['error'] ?? 'Unknown error'));
+        }
+    }
+
+    /**
+     * Verify/test a listing by item ID
+     */
+    public function verifyListing(Request $request)
+    {
+        $request->validate([
+            'item_id' => 'required|string'
+        ]);
+
+        $ebayService = new EbayService();
+        $item = $ebayService->getItemById($request->input('item_id'));
+
+        if ($item) {
+            $message = 'Listing found! ';
+            $message .= 'Title: ' . ($item['title'] ?? 'N/A') . '. ';
+            $message .= 'Item ID: ' . ($item['itemId'] ?? 'N/A') . '. ';
+            
+            if (isset($item['itemWebUrl'])) {
+                $message .= ' <a href="' . $item['itemWebUrl'] . '" target="_blank" class="underline">View on eBay</a>';
+            }
+            
+            return back()->with('message', $message);
+        } else {
+            return back()->with('error', 'Listing not found. The item may not exist, or there may be a delay in the sandbox indexing.');
+        }
     }
 }
