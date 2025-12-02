@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Card;
+use App\Models\Currency;
 use Illuminate\Http\Request;
 
 class CardPsaTitleController extends Controller
@@ -13,6 +14,27 @@ class CardPsaTitleController extends Controller
     public function index(Request $request)
     {
         $query = Card::query();
+        
+        // Exclude cards over $200 USD (convert to JPY for comparison)
+        $maxUsdPrice = 200;
+        $jpyCurrency = Currency::find(Currency::JPY);
+        $usdCurrency = Currency::find(Currency::USD);
+        
+        if ($jpyCurrency && $usdCurrency) {
+            // Get conversion rate from JPY to USD (to convert USD to JPY, we use the inverse)
+            $jpyToUsdConversion = $usdCurrency->convertFrom->where('id', Currency::JPY)->first();
+            if ($jpyToUsdConversion && $jpyToUsdConversion->pivot) {
+                // Convert $200 USD to JPY
+                // If 1 JPY = X USD, then 200 USD = 200 / X JPY
+                $jpyToUsdRate = $jpyToUsdConversion->pivot->conversion_rate;
+                $maxJpyPrice = $maxUsdPrice / $jpyToUsdRate;
+                
+                // Only include cards where cr_price (in JPY) is <= max JPY price
+                // Exclude cards with null cr_price since we can't verify they're under $200
+                $query->whereNotNull('cr_price')
+                      ->whereRaw('CAST(REPLACE(cr_price, ",", "") AS UNSIGNED) <= ?', [$maxJpyPrice]);
+            }
+        }
         
         // Apply filters only if not searching
         if (!$request->has('q') || empty($request->get('q'))) {
@@ -96,16 +118,34 @@ class CardPsaTitleController extends Controller
 
     /**
      * Search for cards by PSA title or search term
-     * Note: Search bypasses all filters to show everything
+     * Note: Search bypasses hide filters but still applies the $200 price limit
      */
     public function search(Request $request)
     {
         $query = $request->get('q');
         
-        $cards = Card::where('psa_title', 'like', "%{$query}%")
-            ->orWhere('search_term', 'like', "%{$query}%")
-            ->orderBy('id', 'desc')
-            ->paginate(50);
+        $cardQuery = Card::where(function($q) use ($query) {
+            $q->where('psa_title', 'like', "%{$query}%")
+              ->orWhere('search_term', 'like', "%{$query}%");
+        });
+        
+        // Apply $200 USD price limit (same as index method)
+        $maxUsdPrice = 200;
+        $jpyCurrency = Currency::find(Currency::JPY);
+        $usdCurrency = Currency::find(Currency::USD);
+        
+        if ($jpyCurrency && $usdCurrency) {
+            $jpyToUsdConversion = $usdCurrency->convertFrom->where('id', Currency::JPY)->first();
+            if ($jpyToUsdConversion && $jpyToUsdConversion->pivot) {
+                $jpyToUsdRate = $jpyToUsdConversion->pivot->conversion_rate;
+                $maxJpyPrice = $maxUsdPrice / $jpyToUsdRate;
+                
+                $cardQuery->whereNotNull('cr_price')
+                          ->whereRaw('CAST(REPLACE(cr_price, ",", "") AS UNSIGNED) <= ?', [$maxJpyPrice]);
+            }
+        }
+        
+        $cards = $cardQuery->orderBy('id', 'desc')->paginate(50);
 
         return view('cards.psa-title.index', compact('cards', 'query'));
     }
