@@ -23,6 +23,11 @@ class PsaJapaneseAuctions extends Component
 
     public function mount()
     {
+        // Only allow access to user with email leesouthwart@gmail.com
+        if (!Auth::check() || Auth::user()->email !== 'leesouthwart@gmail.com') {
+            abort(403, 'Unauthorized access');
+        }
+        
         $this->fetchListings();
     }
 
