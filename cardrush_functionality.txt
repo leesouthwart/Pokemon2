@@ -1,19 +1,13 @@
---
-Front end work. create navigation.
-Settings page for users (might already exist from scaffolding?)
---
-
 Add 'filtering' to the card list
-Add 'sorting' to the card list
 
-Add 'favourites'
-
-
+Make groups based on user id
 Show profit on card list item
 
---
 
-SOLD LISTINGS DATA using Countdown API
+-
+
+SOLD LISTINGS DATA using ebay-average-selling-price
+https://rapidapi.com/ecommet/api/ebay-average-selling-price
 
 We need to basically remake all of the functionality for current listings but with sold listings
 we'll change to using sold listings data as the primary driver for ROI
@@ -23,37 +17,53 @@ like we do with live data.
 
 Use sold data to determine approximate popularity (more sales = more popularity, figure out where to store this - card model?)
 
---
+---
+CSV uploads
+    Create ui to upload and start the ImportCards process
+---
 
 
-Add a 'Region selector' which will change the current currency and we'll use this to determine region
+---
+ GROUPS
 
-
-
-All this because we dont have to have GBP listings in the AUS users and vice versa
-
-Add AUS and US regions
---
-
-Create a 'favourites' list and the ability to add cards to it. Per User (so check auth)
-
-Add Auth to Batch and use that to log if a card has been listed recently. Can do lots of functionality with this Batch to Card link
-
---
+   better ui to create GROUPS
+   better ui for viewing a group
+--- 
 
 Create a 'popularity' algorithm to sort cards by popularity
+    - blocked sold data (liquidity?)
 
---
-Setup Command to consistently update card data. Figure out how we want to schedule these.
-    - CR Data
-    - eBay Data
---
+
 
 Create a 'Generate List' functionality to generate a list of cards based on a set of filters & popularity
-   - stock check before adding to list
-
+  -- Lets you 're-roll' with a few options. 
+  -- lets you 'fill' empty slots with a few options
+  -- add total consistently
+  -- add estimated profit?
 --
 
 'Undercut alert' functionality. Essentially when checking a cards ebay data,
 if we notice darkhoundoom in the list and its not the lowest list, create a model row
 and store it somewhere that we can see.
+
+
+==== BATCHES ==
+
+Add Auth to Batch and use that to log if a card has been listed recently. 
+    Can do lots of functionality with this Batch to Card link (ie on card page show, last listed X days ago etc)
+
+Add 'custom sku' customality
+Add 'combine duplicates' option
+Add a 'total list value' to Batch
+
+
+===
+
+PHASE 2 EBAY ACCOUNT LINKING
+
+possible features:
+    auto reprice
+    edit batch to auto list cards instead of making draft sheet
+    use current listing data to determine buy list generations
+    ebay bid sniping
+=== 

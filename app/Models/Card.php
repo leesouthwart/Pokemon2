@@ -208,6 +208,9 @@ class Card extends Model
         $additionalBid = $this->additional_bid ?? 1;
 
         // Calculate: cr_price (USD) + user grading_cost (converted to USD) + card additional_bid
-        return round($usdPrice + $gradingCostUsd + $additionalBid, 2);
+        $total = $usdPrice + $gradingCostUsd + $additionalBid;
+        
+        // Always round UP to the nearest dollar (even if 21.05 becomes 22.00)
+        return ceil($total);
     }
 }

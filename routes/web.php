@@ -9,6 +9,7 @@ use App\Http\Controllers\CardController;
 use App\Http\Controllers\CardPsaTitleController;
 use App\Http\Controllers\CardGroupController;
 use App\Http\Controllers\BuylistController;
+use App\Http\Controllers\WonBidController;
 
 use App\Models\EbayProfile;
 use App\Models\OauthToken;
@@ -75,6 +76,10 @@ Route::middleware(['currency.convert', 'auth'])->group(function () {
     Route::get('buylist/{buylist}', [BuylistController::class, 'view'])->name('buylist.view');
 
     Route::get('psa-japanese-auctions', function () {
+        // Only allow access to user with email leesouthwart@gmail.com
+        if (!Auth::check() || Auth::user()->email !== 'leesouthwart@gmail.com') {
+            abort(403, 'Unauthorized access');
+        }
         return view('psa-japanese-auctions');
     })->name('psa-japanese-auctions');
 
@@ -85,6 +90,13 @@ Route::middleware(['currency.convert', 'auth'])->group(function () {
         Route::get('/{card}/edit', [CardPsaTitleController::class, 'edit'])->name('edit');
         Route::put('/{card}', [CardPsaTitleController::class, 'update'])->name('update');
         Route::post('/{card}/toggle-excluded', [CardPsaTitleController::class, 'toggleExcluded'])->name('toggle-excluded');
+    });
+
+    // Won Bids Management Routes
+    Route::prefix('bids/won')->name('bids.won.')->group(function () {
+        Route::get('/', [WonBidController::class, 'index'])->name('index');
+        Route::post('/{bid}/confirm', [WonBidController::class, 'confirm'])->name('confirm');
+        Route::post('/{bid}/decline', [WonBidController::class, 'decline'])->name('decline');
     });
 });
 
