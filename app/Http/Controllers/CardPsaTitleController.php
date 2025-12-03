@@ -163,5 +163,35 @@ class CardPsaTitleController extends Controller
             'image_url' => $card->image_url,
         ]);
     }
+
+    /**
+     * Bulk exclude selected cards
+     */
+    public function bulkExclude(Request $request)
+    {
+        $request->validate([
+            'card_ids' => 'required|array',
+            'card_ids.*' => 'exists:cards,id',
+        ]);
+
+        $cardIds = $request->input('card_ids');
+        $count = Card::whereIn('id', $cardIds)->update(['excluded_from_sniping' => true]);
+
+        // Preserve filter parameters on redirect
+        $redirectUrl = route('cards.psa-title.index');
+        $params = [];
+        if ($request->has('hide_with_title')) {
+            $params['hide_with_title'] = $request->hide_with_title;
+        }
+        if ($request->has('hide_excluded')) {
+            $params['hide_excluded'] = $request->hide_excluded;
+        }
+        if (!empty($params)) {
+            $redirectUrl .= '?' . http_build_query($params);
+        }
+
+        return redirect($redirectUrl)
+            ->with('success', "Successfully excluded {$count} card(s).");
+    }
 }
 

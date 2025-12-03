@@ -90,6 +90,7 @@ Route::middleware(['currency.convert', 'auth'])->group(function () {
         Route::get('/{card}/edit', [CardPsaTitleController::class, 'edit'])->name('edit');
         Route::put('/{card}', [CardPsaTitleController::class, 'update'])->name('update');
         Route::post('/{card}/toggle-excluded', [CardPsaTitleController::class, 'toggleExcluded'])->name('toggle-excluded');
+        Route::post('/bulk-exclude', [CardPsaTitleController::class, 'bulkExclude'])->name('bulk-exclude');
     });
 
     // Won Bids Management Routes

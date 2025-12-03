@@ -85,10 +85,40 @@
                     @endif
 
                     @if($cards->count() > 0)
+                        <!-- Bulk Actions -->
+                        <div class="mb-4 flex items-center gap-4">
+                            <form method="POST" action="{{ route('cards.psa-title.bulk-exclude') }}" id="bulk-exclude-form" class="flex items-center gap-2">
+                                @csrf
+                                @php
+                                    $hideWithTitle = request('hide_with_title', '1');
+                                    $hideExcluded = request('hide_excluded', '1');
+                                @endphp
+                                <input type="hidden" name="hide_with_title" value="{{ $hideWithTitle }}">
+                                <input type="hidden" name="hide_excluded" value="{{ $hideExcluded }}">
+                                <div id="selected-card-ids-container"></div>
+                                <button
+                                    type="submit"
+                                    id="bulk-exclude-btn"
+                                    disabled
+                                    class="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white font-semibold px-4 py-2 rounded text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Exclude Selected (<span id="selected-count">0</span>)
+                                </button>
+                            </form>
+                        </div>
+
                         <div class="overflow-x-auto">
                             <table class="min-w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700">
                                 <thead class="bg-gray-50 dark:bg-gray-800">
                                     <tr>
+                                        <th class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-left text-xs leading-4 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            <input
+                                                type="checkbox"
+                                                id="select-all"
+                                                class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                onchange="toggleSelectAll(this.checked)"
+                                            >
+                                        </th>
                                         <th class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-left text-xs leading-4 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             ID
                                         </th>
@@ -112,6 +142,14 @@
                                 <tbody class="bg-white dark:bg-gray-800">
                                     @foreach($cards as $card)
                                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 {{ $card->excluded_from_sniping ? 'opacity-50' : '' }}">
+                                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 dark:border-gray-700">
+                                                <input
+                                                    type="checkbox"
+                                                    class="card-checkbox rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                    value="{{ $card->id }}"
+                                                    onchange="updateSelectedCount()"
+                                                >
+                                            </td>
                                             <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 dark:border-gray-700">
                                                 <div class="text-sm leading-5 text-gray-900 dark:text-gray-100">{{ $card->id }}</div>
                                             </td>
@@ -328,6 +366,50 @@
             if (hideExcluded !== null) {
                 document.getElementById('hide_excluded').checked = hideExcluded === '1';
             }
+            
+            updateSelectedCount();
         });
+
+        function toggleSelectAll(checked) {
+            const checkboxes = document.querySelectorAll('.card-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = checked;
+            });
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.card-checkbox:checked');
+            const count = checkboxes.length;
+            const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            document.getElementById('selected-count').textContent = count;
+            
+            // Update hidden inputs for form submission
+            const container = document.getElementById('selected-card-ids-container');
+            container.innerHTML = '';
+            selectedIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'card_ids[]';
+                input.value = id;
+                container.appendChild(input);
+            });
+            
+            const bulkExcludeBtn = document.getElementById('bulk-exclude-btn');
+            if (count > 0) {
+                bulkExcludeBtn.disabled = false;
+            } else {
+                bulkExcludeBtn.disabled = true;
+            }
+            
+            // Update select all checkbox state
+            const selectAllCheckbox = document.getElementById('select-all');
+            const allCheckboxes = document.querySelectorAll('.card-checkbox');
+            if (allCheckboxes.length > 0) {
+                selectAllCheckbox.checked = count === allCheckboxes.length;
+                selectAllCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+            }
+        }
     </script>
 </x-app-layout>
