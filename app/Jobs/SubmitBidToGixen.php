@@ -70,20 +70,46 @@ class SubmitBidToGixen implements ShouldQueue
                 return;
             }
 
+            // Refresh user balance to get latest
+            $this->user->refresh();
+
             // Check user has minimum balance of $200
             if ($this->user->balance < 200) {
-                Log::warning("User {$this->user->id} has balance below minimum threshold ({$this->user->balance} < 200). Cancelling pending bid {$this->pendingBid->id}");
-                
-                $this->pendingBid->update([
-                    'status' => 'cancelled due to low funds',
-                ]);
+                // Check if we're mid-cycle (there are active bids)
+                $activeBidsCount = Bid::where('user_id', $this->user->id)
+                    ->where('status', 'submitted')
+                    ->whereNotNull('end_date')
+                    ->where('end_date', '>', now())
+                    ->count();
+
+                if ($activeBidsCount > 0) {
+                    // Mid-cycle: mark as insufficient_funds for retry
+                    Log::warning("User {$this->user->id} has balance below minimum threshold ({$this->user->balance} < 200) but has active bids. Marking pending bid {$this->pendingBid->id} as insufficient_funds for retry.");
+                    
+                    $this->pendingBid->update([
+                        'status' => 'insufficient_funds',
+                    ]);
+                } else {
+                    // Start of cycle: truly cancel
+                    Log::warning("User {$this->user->id} has balance below minimum threshold ({$this->user->balance} < 200) and no active bids. Cancelling pending bid {$this->pendingBid->id}");
+                    
+                    $this->pendingBid->update([
+                        'status' => 'cancelled due to low funds',
+                    ]);
+                }
                 
                 return;
             }
 
             // Check user has sufficient balance for this specific bid
             if ($this->user->balance < $this->pendingBid->bid_amount) {
-                Log::warning("User {$this->user->id} has insufficient balance ({$this->user->balance}) for bid amount {$this->pendingBid->bid_amount}");
+                // Mark as insufficient_funds so it can be retried when balance increases
+                Log::warning("User {$this->user->id} has insufficient balance ({$this->user->balance}) for bid amount {$this->pendingBid->bid_amount}. Marking as insufficient_funds for retry.");
+                
+                $this->pendingBid->update([
+                    'status' => 'insufficient_funds',
+                ]);
+                
                 return;
             }
 

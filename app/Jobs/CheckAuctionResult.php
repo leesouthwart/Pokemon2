@@ -3,13 +3,17 @@
 namespace App\Jobs;
 
 use App\Models\Bid;
+use App\Models\PendingBid;
+use App\Models\User;
 use App\Services\EbayService;
+use App\Jobs\SubmitBidToGixen;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class CheckAuctionResult implements ShouldQueue
 {
@@ -89,6 +93,10 @@ class CheckAuctionResult implements ShouldQueue
                 $this->bid->save();
                 
                 Log::info("Bid {$this->bid->id} won auction. End price: {$endPrice}, Bid amount: {$this->bid->bid_amount}. Refunded {$this->bid->bid_amount} and deducted {$endPrice} from user {$user->id}");
+                
+                // After refunding, check if we can retry any pending bids that were marked as insufficient_funds
+                // (We refunded bid_amount, so balance increased)
+                $this->retryPendingBidsWithInsufficientFunds($user);
             } else {
                 // We lost - refund the balance
                 $this->bid->status = 'lost';
@@ -105,11 +113,78 @@ class CheckAuctionResult implements ShouldQueue
 
                 Log::info("Bid {$this->bid->id} lost auction. End price: {$endPrice}, Bid amount: {$this->bid->bid_amount}. Refunded {$this->bid->bid_amount} to user {$user->id}");
             }
+
+            // After refunding, check if we can retry any pending bids that were marked as insufficient_funds
+            $this->retryPendingBidsWithInsufficientFunds($user);
         } catch (\Exception $e) {
             Log::error("Error checking auction result: " . $e->getMessage(), [
                 'bid_id' => $this->bid->id,
                 'exception' => $e->getTraceAsString(),
             ]);
+        }
+    }
+
+    /**
+     * Retry pending bids that were marked as insufficient_funds when balance becomes available
+     */
+    private function retryPendingBidsWithInsufficientFunds(User $user)
+    {
+        // Only retry if balance is now >= $200
+        $user->refresh();
+        if ($user->balance < 200) {
+            return;
+        }
+
+        // Find pending bids with insufficient_funds status that:
+        // 1. Haven't been submitted
+        // 2. End within the next 3 hours
+        // 3. Are still in the future
+        $threeHoursFromNow = now()->addHours(3);
+        
+        $pendingBids = PendingBid::where('bid_submitted', false)
+            ->where('status', 'insufficient_funds')
+            ->whereNotNull('end_date')
+            ->where('end_date', '>', now())
+            ->where('end_date', '<=', $threeHoursFromNow)
+            ->orderBy('end_date', 'asc')
+            ->get();
+
+        if ($pendingBids->isEmpty()) {
+            return;
+        }
+
+        Log::info("Retrying {$pendingBids->count()} pending bids after balance refund. User balance: {$user->balance}");
+
+        $delaySeconds = 0;
+        $retriedCount = 0;
+
+        foreach ($pendingBids as $pendingBid) {
+            // Refresh user balance in case it changed
+            $user->refresh();
+
+            // Check if we still have enough balance
+            if ($user->balance < 200 || $user->balance < $pendingBid->bid_amount) {
+                // Still insufficient, skip for now
+                continue;
+            }
+
+            // Clear the insufficient_funds status
+            $pendingBid->update([
+                'status' => null,
+            ]);
+
+            // Dispatch job to submit the bid
+            SubmitBidToGixen::dispatch($pendingBid, $user)
+                ->delay(now()->addSeconds($delaySeconds));
+
+            $retriedCount++;
+            $delaySeconds += 10; // 10 second gap between each bid submission
+
+            Log::info("Retried pending bid {$pendingBid->id} after balance refund. Delay: {$delaySeconds}s");
+        }
+
+        if ($retriedCount > 0) {
+            Log::info("Successfully retried {$retriedCount} pending bids after balance refund");
         }
     }
 }
