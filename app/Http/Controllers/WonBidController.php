@@ -46,7 +46,7 @@ class WonBidController extends Controller
         }
 
         // Update status to confirmed
-        $bid->status = 'won_confirmed';
+        $bid->status = 'won';
         $bid->save();
 
         Log::info("Bid {$bid->id} confirmed by user {$bid->user_id}");
