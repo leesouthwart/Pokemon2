@@ -2,14 +2,12 @@
     <div class="px-4 mb-6 flex flex-wrap items-center gap-4">
         <h2 class="text-2xl font-bold text-white">PSA Japanese PSA 10 Auctions (Ending in 24 Hours)</h2>
         <div class="ml-auto flex items-center gap-3">
-            <label class="flex items-center gap-2 cursor-pointer">
-                <span class="text-sm text-white">Show All API Listings</span>
-                <input
-                    type="checkbox"
-                    wire:model.live="showAllApiListings"
-                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                >
-            </label>
+            <a 
+                href="{{ route('psa-japanese-api-listings') }}"
+                class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-4 py-2 rounded transition"
+            >
+                View API Listings
+            </a>
             <a 
                 href="{{ route('cards.psa-title.index') }}"
                 class="bg-green-700 hover:bg-green-800 text-white font-bold px-4 py-2 rounded transition"
@@ -61,9 +59,6 @@
                     <th scope="col" class="py-2 px-2 font-semibold">Title</th>
                     <th scope="col" class="py-2 px-2 font-semibold">Current Bid</th>
                     <th scope="col" class="py-2 px-2 font-semibold">Ends</th>
-                    @if($showAllApiListings)
-                        <th scope="col" class="py-2 px-2 font-semibold">Status</th>
-                    @endif
                     <th scope="col" class="py-2 px-2 font-semibold">Bid</th>
                 </tr>
             </thead>
@@ -96,22 +91,6 @@
                                 @endif
                             </div>
                         </td>
-                        @if($showAllApiListings)
-                            <td class="py-2 px-2">
-                                <div class="flex flex-col gap-1 text-xs">
-                                    @if($listing['hasPendingBid'] ?? false)
-                                        <span class="px-2 py-1 bg-green-600 text-white rounded">Has Pending Bid</span>
-                                    @else
-                                        <span class="px-2 py-1 bg-gray-600 text-white rounded">No Pending Bid</span>
-                                    @endif
-                                    @if($listing['hasMatchingCard'] ?? false)
-                                        <span class="px-2 py-1 bg-blue-600 text-white rounded">Has Matching Card (ID: {{ $listing['matchingCardId'] ?? 'N/A' }})</span>
-                                    @else
-                                        <span class="px-2 py-1 bg-red-600 text-white rounded">No Matching Card</span>
-                                    @endif
-                                </div>
-                            </td>
-                        @endif
                         <td class="py-2 px-2">
                             <div class="flex flex-col gap-2">
                                 <form wire:submit.prevent="submitBid('{{ $listing['itemId'] }}')" class="flex items-center gap-2">

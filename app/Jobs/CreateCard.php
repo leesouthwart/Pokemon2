@@ -23,18 +23,20 @@ class CreateCard implements ShouldQueue
     public $url;
     public $ebayService;
     public $groups;
+    public $psaTitle;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($searchTerm, $url, $groups)
+    public function __construct($searchTerm, $url, $groups, $psaTitle = null)
     {
         $this->searchTerm = $searchTerm;
         $this->url = $url;
         $this->ebayService = new EbayService();
         $this->groups = $groups;
+        $this->psaTitle = $psaTitle;
     }
 
     /**
@@ -60,6 +62,9 @@ class CreateCard implements ShouldQueue
                     $card->url = $this->url;
                     $card->cr_price = intval(str_replace(',', '', $data['cr_price']));
                     $card->image_url = $data['image_url'];
+                    if ($this->psaTitle) {
+                        $card->psa_title = $this->psaTitle;
+                    }
                     $card->save();
 
                     if (
@@ -74,6 +79,11 @@ class CreateCard implements ShouldQueue
                     }
                 } else {
                     $card = $existingCard;
+                    // Update psa_title if provided and card doesn't have one
+                    if ($this->psaTitle && !$card->psa_title) {
+                        $card->psa_title = $this->psaTitle;
+                        $card->save();
+                    }
                 }
 
                 $this->ebayService->getEbayData($this->searchTerm, $region);

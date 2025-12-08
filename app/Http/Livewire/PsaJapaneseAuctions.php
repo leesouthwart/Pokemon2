@@ -19,7 +19,6 @@ class PsaJapaneseAuctions extends Component
     public $loading = true;
     public $error = null;
     public $bidStatus = []; // Track bid status per item
-    public $showAllApiListings = false; // Toggle to show all API listings vs pending bids
 
     public function mount()
     {
@@ -31,81 +30,39 @@ class PsaJapaneseAuctions extends Component
         $this->fetchListings();
     }
 
-    public function updatedShowAllApiListings()
-    {
-        $this->fetchListings();
-    }
-
     public function fetchListings()
     {
         $this->loading = true;
         $this->error = null;
 
         try {
-            if ($this->showAllApiListings) {
-                // Fetch all listings from eBay API
-                $ebayService = new EbayService();
-                $apiListings = $ebayService->getPsaJapanesePsa10Auctions();
-                
-                // Log if no listings returned (for debugging)
-                if (empty($apiListings)) {
-                    \Log::info('getPsaJapanesePsa10Auctions returned empty array', [
-                        'environment' => app()->environment(),
-                    ]);
-                }
-                
-                // Get all pending bid item IDs for comparison
-                $pendingBidItemIds = PendingBid::pluck('ebay_item_id')->toArray();
-                
-                // Convert API listings to format and add match status
-                $this->allListings = collect($apiListings)->map(function ($listing) use ($pendingBidItemIds) {
-                    $hasPendingBid = in_array($listing['itemId'], $pendingBidItemIds);
-                    $matchingCard = \App\Models\Card::findByPsaTitle($listing['title']);
-                    
-                    return [
-                        'itemId' => $listing['itemId'],
-                        'title' => $listing['title'],
-                        'image' => $listing['image'] ?? '',
-                        'currentBid' => (float)($listing['currentBid'] ?? 0),
-                        'currency' => $listing['currency'] ?? 'USD',
-                        'url' => $listing['url'] ?? '',
-                        'endDate' => $listing['endDate'] ?? null,
-                        'bidAmount' => null,
-                        'pendingBidId' => null,
-                        'hasPendingBid' => $hasPendingBid,
-                        'hasMatchingCard' => $matchingCard !== null,
-                        'matchingCardId' => $matchingCard ? $matchingCard->id : null,
-                    ];
-                })->toArray();
-            } else {
-                // Get pending bids that haven't been submitted yet and aren't cancelled
-                $pendingBids = PendingBid::where('bid_submitted', false)
-                    ->where(function($query) {
-                        $query->whereNull('status')
-                              ->orWhere('status', '!=', 'cancelled due to low funds');
-                    })
-                    ->whereNotNull('end_date')
-                    ->where('end_date', '>', now())
-                    ->with('card')
-                    ->get();
+            // Get pending bids that haven't been submitted yet and aren't cancelled
+            $pendingBids = PendingBid::where('bid_submitted', false)
+                ->where(function($query) {
+                    $query->whereNull('status')
+                          ->orWhere('status', '!=', 'cancelled due to low funds');
+                })
+                ->whereNotNull('end_date')
+                ->where('end_date', '>', now())
+                ->with('card')
+                ->get();
 
-                // Convert pending bids to listing format
-                $this->allListings = $pendingBids->map(function ($pendingBid) {
-                    return [
-                        'itemId' => $pendingBid->ebay_item_id,
-                        'title' => $pendingBid->ebay_title,
-                        'image' => $pendingBid->ebay_image_url ?? '',
-                        'currentBid' => (float)$pendingBid->current_bid,
-                        'currency' => $pendingBid->currency,
-                        'url' => $pendingBid->ebay_url,
-                        'endDate' => $pendingBid->end_date ? $pendingBid->end_date->toIso8601String() : null,
-                        'bidAmount' => (float)$pendingBid->bid_amount,
-                        'pendingBidId' => $pendingBid->id,
-                        'hasPendingBid' => true,
-                        'hasMatchingCard' => true,
-                    ];
-                })->toArray();
-            }
+            // Convert pending bids to listing format
+            $this->allListings = $pendingBids->map(function ($pendingBid) {
+                return [
+                    'itemId' => $pendingBid->ebay_item_id,
+                    'title' => $pendingBid->ebay_title,
+                    'image' => $pendingBid->ebay_image_url ?? '',
+                    'currentBid' => (float)$pendingBid->current_bid,
+                    'currency' => $pendingBid->currency,
+                    'url' => $pendingBid->ebay_url,
+                    'endDate' => $pendingBid->end_date ? $pendingBid->end_date->toIso8601String() : null,
+                    'bidAmount' => (float)$pendingBid->bid_amount,
+                    'pendingBidId' => $pendingBid->id,
+                    'hasPendingBid' => true,
+                    'hasMatchingCard' => true,
+                ];
+            })->toArray();
 
             $this->resetPage(); // Reset to first page when fetching new data
         } catch (\Exception $e) {

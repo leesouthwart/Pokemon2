@@ -83,6 +83,14 @@ Route::middleware(['currency.convert', 'auth'])->group(function () {
         return view('psa-japanese-auctions');
     })->name('psa-japanese-auctions');
 
+    Route::get('psa-japanese-api-listings', function () {
+        // Only allow access to user with email leesouthwart@gmail.com
+        if (!Auth::check() || Auth::user()->email !== 'leesouthwart@gmail.com') {
+            abort(403, 'Unauthorized access');
+        }
+        return view('psa-japanese-api-listings');
+    })->name('psa-japanese-api-listings');
+
     // PSA Title Management Routes
     Route::prefix('cards/psa-title')->name('cards.psa-title.')->group(function () {
         Route::get('/', [CardPsaTitleController::class, 'index'])->name('index');
