@@ -5,6 +5,12 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold">PSA Title Management</h2>
+                        <a 
+                            href="{{ route('psa-japanese-api-listings') }}"
+                            class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-4 py-2 rounded transition"
+                        >
+                            Back to API Listings
+                        </a>
                     </div>
 
                     <!-- Filter Toggles -->
