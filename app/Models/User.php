@@ -89,4 +89,38 @@ class User extends Authenticatable
             return $response->json('username');
         }
     }
+
+    /**
+     * Get fund increases for this user
+     */
+    public function fundIncreases()
+    {
+        return $this->hasMany(FundIncrease::class);
+    }
+
+    /**
+     * Calculate profit: payouts - won bids (end_price)
+     * 
+     * @return array Returns ['profit' => float, 'payouts' => float, 'spent' => float]
+     */
+    public function calculateProfit()
+    {
+        // Get total payouts (fund increases of type 'payout')
+        $payouts = $this->fundIncreases()
+            ->where('type', 'payout')
+            ->sum('amount');
+
+        // Get total spent (won bids end_price)
+        $spent = \App\Models\Bid::where('user_id', $this->id)
+            ->where('status', 'won')
+            ->sum('end_price');
+
+        $profit = $payouts - $spent;
+
+        return [
+            'profit' => (float)$profit,
+            'payouts' => (float)$payouts,
+            'spent' => (float)$spent,
+        ];
+    }
 }

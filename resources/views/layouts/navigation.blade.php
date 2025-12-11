@@ -25,6 +25,47 @@
                 >
                     Login to eBay
                 </a>
+                
+                @auth
+                    @php
+                        $profitData = Auth::user()->calculateProfit();
+                    @endphp
+                    <!-- Profit Display -->
+                    <div class="relative group">
+                        <div class="inline-flex items-center px-3 py-2 rounded-md text-sm font-semibold transition cursor-pointer
+                            {{ $profitData['profit'] >= 0 
+                                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
+                                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' }}">
+                            <span class="font-medium">Profit:</span>
+                            <span class="ml-2 font-bold">
+                                ${{ number_format($profitData['profit'], 2) }}
+                            </span>
+                        </div>
+                        
+                        <!-- Tooltip -->
+                        <div class="absolute right-0 top-full mt-2 w-64 p-3 bg-gray-900 dark:bg-gray-800 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                                    <span class="text-gray-400">Payouts:</span>
+                                    <span class="font-semibold text-green-400">${{ number_format($profitData['payouts'], 2) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                                    <span class="text-gray-400">Spent:</span>
+                                    <span class="font-semibold text-red-400">${{ number_format($profitData['spent'], 2) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-2">
+                                    <span class="text-gray-400">Net Profit:</span>
+                                    <span class="font-bold {{ $profitData['profit'] >= 0 ? 'text-green-400' : 'text-red-400' }}">
+                                        ${{ number_format($profitData['profit'], 2) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- Arrow -->
+                            <div class="absolute bottom-full right-4 border-4 border-transparent border-b-gray-900 dark:border-b-gray-800"></div>
+                        </div>
+                    </div>
+                @endauth
+                
                 <!-- Settings Dropdown -->
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\FundIncrease;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -84,17 +85,31 @@ class ProfileController extends Controller
     {
         $request->validate([
             'amount' => ['required', 'numeric', 'min:0'],
+            'type' => ['required', 'in:payout,addition'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $user = $request->user();
         $amount = (float)$request->input('amount');
+        $type = $request->input('type');
+        $notes = $request->input('notes');
         
+        // Create fund increase record
+        FundIncrease::create([
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'type' => $type,
+            'notes' => $notes,
+        ]);
+        
+        // Update user balance
         $user->balance += $amount;
         $user->save();
 
         return Redirect::route('profile.edit')
             ->with('status', 'balance-added')
             ->with('balance_added', $amount)
-            ->with('new_balance', $user->balance);
+            ->with('new_balance', $user->balance)
+            ->with('fund_type', $type);
     }
 }
