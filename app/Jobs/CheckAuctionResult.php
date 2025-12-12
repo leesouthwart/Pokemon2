@@ -129,9 +129,9 @@ class CheckAuctionResult implements ShouldQueue
      */
     private function retryPendingBidsWithInsufficientFunds(User $user)
     {
-        // Only retry if balance is now >= $200
+        // Only retry if balance is now >= $100
         $user->refresh();
-        if ($user->balance < 200) {
+        if ($user->balance < 100) {
             return;
         }
 
@@ -163,7 +163,7 @@ class CheckAuctionResult implements ShouldQueue
             $user->refresh();
 
             // Check if we still have enough balance
-            if ($user->balance < 200 || $user->balance < $pendingBid->bid_amount) {
+            if ($user->balance < 100 || $user->balance < $pendingBid->bid_amount) {
                 // Still insufficient, skip for now
                 continue;
             }

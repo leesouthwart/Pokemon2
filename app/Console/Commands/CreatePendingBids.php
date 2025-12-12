@@ -39,7 +39,7 @@ class CreatePendingBids extends Command
             return Command::FAILURE;
         }
 
-        if ($user->balance < 200) {
+        if ($user->balance < 100) {
             $this->warn("User balance ({$user->balance}) is below minimum threshold of $200. Skipping pending bid creation.");
             return Command::SUCCESS;
         }

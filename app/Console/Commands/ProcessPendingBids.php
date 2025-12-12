@@ -63,7 +63,7 @@ class ProcessPendingBids extends Command
         $user = User::where('email', 'leesouthwart@gmail.com')->first();
         $user->refresh(); // Get latest balance
 
-        // Check if we're at "start of cycle" (balance < $200 AND no active bids)
+        // Check if we're at "start of cycle" (balance < $100 AND no active bids)
         // Active bids = submitted bids that haven't been checked yet (status = 'submitted')
         $activeBidsCount = Bid::where('user_id', $user->id)
             ->where('status', 'submitted')
@@ -71,7 +71,7 @@ class ProcessPendingBids extends Command
             ->where('end_date', '>', now())
             ->count();
 
-        $isStartOfCycle = $user->balance < 200 && $activeBidsCount === 0;
+        $isStartOfCycle = $user->balance < 100 && $activeBidsCount === 0;
 
         if ($isStartOfCycle) {
             $this->warn("User balance ({$user->balance}) is below minimum threshold AND no active bids. Cancelling all pending bids.");
@@ -111,8 +111,8 @@ class ProcessPendingBids extends Command
             // Refresh user balance in case it changed
             $user->refresh();
 
-            // Check user has minimum balance of $200
-            if ($user->balance < 200) {
+            // Check user has minimum balance of $100
+            if ($user->balance < 100) {
                 // We're mid-cycle (there are active bids), so mark as insufficient_funds for retry
                 $this->warn("User balance ({$user->balance}) is below minimum threshold. Marking pending bid {$pendingBid->id} as insufficient_funds for retry.");
                 

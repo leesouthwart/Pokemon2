@@ -73,8 +73,8 @@ class SubmitBidToGixen implements ShouldQueue
             // Refresh user balance to get latest
             $this->user->refresh();
 
-            // Check user has minimum balance of $200
-            if ($this->user->balance < 200) {
+            // Check user has minimum balance of $100
+            if ($this->user->balance < 100) {
                 // Check if we're mid-cycle (there are active bids)
                 $activeBidsCount = Bid::where('user_id', $this->user->id)
                     ->where('status', 'submitted')
@@ -84,14 +84,14 @@ class SubmitBidToGixen implements ShouldQueue
 
                 if ($activeBidsCount > 0) {
                     // Mid-cycle: mark as insufficient_funds for retry
-                    Log::warning("User {$this->user->id} has balance below minimum threshold ({$this->user->balance} < 200) but has active bids. Marking pending bid {$this->pendingBid->id} as insufficient_funds for retry.");
+                    Log::warning("User {$this->user->id} has balance below minimum threshold ({$this->user->balance} < 100) but has active bids. Marking pending bid {$this->pendingBid->id} as insufficient_funds for retry.");
                     
                     $this->pendingBid->update([
                         'status' => 'insufficient_funds',
                     ]);
                 } else {
                     // Start of cycle: truly cancel
-                    Log::warning("User {$this->user->id} has balance below minimum threshold ({$this->user->balance} < 200) and no active bids. Cancelling pending bid {$this->pendingBid->id}");
+                    Log::warning("User {$this->user->id} has balance below minimum threshold ({$this->user->balance} < 100) and no active bids. Cancelling pending bid {$this->pendingBid->id}");
                     
                     $this->pendingBid->update([
                         'status' => 'cancelled due to low funds',
