@@ -4,6 +4,12 @@
         <div class="px-4 w-1/4">
                 <input type="text" name="search_term" id="search" wire:model.live="search" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Search...">
         </div>
+        <div class="px-4 w-1/6">
+                <input type="text" name="min_price" id="min_price" wire:model.live="minPrice" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Min Price (GBP)">
+        </div>
+        <div class="px-4 w-1/6">
+                <input type="text" name="max_price" id="max_price" wire:model.live="maxPrice" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Max Price (GBP)">
+        </div>
 
         
             <div class="flex ml-auto">

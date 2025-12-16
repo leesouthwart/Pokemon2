@@ -47,6 +47,7 @@
             @endif
         </div>
 
+        @if(auth()->user()->email === 'leesouthwart@gmail.com')
         <div>
             <x-input-label for="balance" :value="__('Balance')" />
             <x-text-input id="balance" name="balance" type="number" class="mt-1 block w-full" :value="old('balance', $user->balance ?? 0)" min="0" step="1" />
@@ -55,6 +56,7 @@
                 {{ __('Your account balance.') }}
             </p>
         </div>
+        @endif
 
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>

@@ -27,13 +27,21 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        
+        // Only allow user with email 'leesouthwart@gmail.com' to update balance
+        $validated = $request->validated();
+        if (isset($validated['balance']) && $user->email !== 'leesouthwart@gmail.com') {
+            unset($validated['balance']); // Remove balance from validated data if user is not authorized
+        }
+        
+        $user->fill($validated);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -83,6 +91,11 @@ class ProfileController extends Controller
      */
     public function addBalance(Request $request): RedirectResponse
     {
+        // Only allow user with email 'leesouthwart@gmail.com' to add balance
+        if ($request->user()->email !== 'leesouthwart@gmail.com') {
+            abort(403, 'Unauthorized access');
+        }
+
         $request->validate([
             'amount' => ['required', 'numeric', 'min:0'],
             'type' => ['required', 'in:payout,addition'],

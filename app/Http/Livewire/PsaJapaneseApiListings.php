@@ -273,6 +273,15 @@ class PsaJapaneseApiListings extends Component
             return;
         }
 
+        // Only allow user with email 'leesouthwart@gmail.com' to set pending bids
+        if (Auth::user()->email !== 'leesouthwart@gmail.com') {
+            $this->bidStatus[$itemId] = [
+                'success' => false,
+                'message' => 'Unauthorized: Only authorized users can place bids.'
+            ];
+            return;
+        }
+
         $bidAmount = $this->bidAmounts[$itemId] ?? null;
         
         if (!$bidAmount || $bidAmount <= 0) {
