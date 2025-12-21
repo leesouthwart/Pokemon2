@@ -8,6 +8,7 @@ use App\Services\EbayService;
 use App\Services\GixenService;
 use App\Models\PendingBid;
 use App\Models\Card;
+use App\Models\PsaTitle;
 use App\Jobs\CreateCard;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -42,6 +43,7 @@ class PsaJapaneseApiListings extends Component
     public $cardSearchQuery = '';
     public $searchResults = [];
     public $selectedCardId = null;
+    public $selectedCardPsaTitles = []; // Store existing PSA titles for selected card
 
     public function mount()
     {
@@ -76,6 +78,7 @@ class PsaJapaneseApiListings extends Component
             $this->cardSearchQuery = '';
             $this->searchResults = [];
             $this->selectedCardId = null;
+            $this->selectedCardPsaTitles = [];
             $this->modalMessage = null;
             $this->modalMessageType = null;
             $this->creatingCard = false;
@@ -92,6 +95,7 @@ class PsaJapaneseApiListings extends Component
         $this->cardSearchQuery = '';
         $this->searchResults = [];
         $this->selectedCardId = null;
+        $this->selectedCardPsaTitles = [];
         $this->modalMessage = null;
         $this->modalMessageType = null;
         $this->creatingCard = false;
@@ -117,8 +121,12 @@ class PsaJapaneseApiListings extends Component
         
         $this->searchResults = Card::where(function($q) use ($query) {
                 $q->where('search_term', 'like', "%{$query}%")
-                  ->orWhere('psa_title', 'like', "%{$query}%");
+                  ->orWhere('psa_title', 'like', "%{$query}%")
+                  ->orWhereHas('psaTitles', function($q2) use ($query) {
+                      $q2->where('title', 'like', "%{$query}%");
+                  });
             })
+            ->with('psaTitles')
             ->orderBy('id', 'desc')
             ->limit(20)
             ->get()
@@ -127,7 +135,8 @@ class PsaJapaneseApiListings extends Component
                     'id' => $card->id,
                     'search_term' => $card->search_term,
                     'image_url' => $card->image_url,
-                    'psa_title' => $card->psa_title,
+                    'psa_title' => $card->psa_title, // Keep for backward compatibility
+                    'psa_titles' => $card->psaTitles->pluck('title')->toArray(),
                 ];
             })
             ->toArray();
@@ -136,6 +145,12 @@ class PsaJapaneseApiListings extends Component
     public function selectCard($cardId)
     {
         $this->selectedCardId = $cardId;
+        $card = Card::with('psaTitles')->find($cardId);
+        if ($card) {
+            $this->selectedCardPsaTitles = $card->psaTitles->pluck('title')->toArray();
+        } else {
+            $this->selectedCardPsaTitles = [];
+        }
     }
 
     public function createNewCard()
@@ -191,10 +206,20 @@ class PsaJapaneseApiListings extends Component
         
         if ($card) {
             try {
-                $card->psa_title = $this->selectedListing['title'];
-                $card->save();
+                // Check if this PSA title already exists for this card
+                $existingTitle = $card->psaTitles()->where('title', $this->selectedListing['title'])->first();
                 
-                $this->modalMessage = 'Card successfully linked to listing!';
+                if (!$existingTitle) {
+                    // Add new PSA title
+                    $card->psaTitles()->create([
+                        'title' => $this->selectedListing['title'],
+                    ]);
+                    
+                    $this->modalMessage = 'PSA title successfully added to card!';
+                } else {
+                    $this->modalMessage = 'This PSA title already exists for this card.';
+                }
+                
                 $this->modalMessageType = 'success';
                 
                 // Refresh listings

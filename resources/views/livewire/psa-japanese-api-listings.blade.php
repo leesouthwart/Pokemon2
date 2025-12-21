@@ -297,6 +297,18 @@
                                     placeholder="Type to search by search term or PSA title..."
                                 >
                             </div>
+                            
+                            @if($selectedCardId && !empty($selectedCardPsaTitles))
+                                <div class="p-3 bg-gray-700 rounded">
+                                    <p class="text-sm text-gray-300 mb-2"><strong>Existing PSA Titles for Selected Card:</strong></p>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($selectedCardPsaTitles as $title)
+                                            <span class="px-2 py-1 bg-gray-600 text-gray-300 text-sm rounded">{{ $title }}</span>
+                                        @endforeach
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-2">The listing title will be added as a new PSA title if it doesn't already exist.</p>
+                                </div>
+                            @endif
 
                             @if(strlen($cardSearchQuery) >= 2)
                                 @if(count($searchResults) > 0)
@@ -314,7 +326,16 @@
                                                     @endif
                                                     <div class="flex-1">
                                                         <p class="text-white font-medium">{{ $result['search_term'] }}</p>
-                                                        @if($result['psa_title'])
+                                                        @if(!empty($result['psa_titles']))
+                                                            <div class="mt-1">
+                                                                <p class="text-xs text-gray-500 mb-1">PSA Titles ({{ count($result['psa_titles']) }}):</p>
+                                                                <div class="flex flex-wrap gap-1">
+                                                                    @foreach($result['psa_titles'] as $title)
+                                                                        <span class="px-2 py-0.5 bg-gray-600 text-gray-300 text-xs rounded">{{ $title }}</span>
+                                                                    @endforeach
+                                                                </div>
+                                                            </div>
+                                                        @elseif($result['psa_title'])
                                                             <p class="text-sm text-gray-400">PSA Title: {{ $result['psa_title'] }}</p>
                                                         @endif
                                                     </div>

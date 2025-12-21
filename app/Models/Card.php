@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\PsaTitle;
 
 use GuzzleHttp\Client;
 use DOMDocument;
@@ -38,6 +39,11 @@ class Card extends Model
     public function cardGroups(): BelongsToMany
     {
         return $this->belongsToMany(CardGroup::class, 'card_cardgroup');
+    }
+
+    public function psaTitles()
+    {
+        return $this->hasMany(PsaTitle::class);
     }
 
     public function getCardDataFromCr($url)
@@ -149,7 +155,25 @@ class Card extends Model
 
         $ebayTitleLower = strtolower($ebayTitle);
 
-        // Search for cards where the PSA title is contained in the eBay title (case-insensitive)
+        // First, try to find by psaTitles relationship (new way)
+        // Get all cards with PSA titles that aren't excluded
+        $cards = static::whereHas('psaTitles')
+            ->where('excluded_from_sniping', false)
+            ->with('psaTitles')
+            ->get();
+
+        $matchingCard = $cards->first(function ($card) use ($ebayTitleLower) {
+            return $card->psaTitles->contains(function ($psaTitle) use ($ebayTitleLower) {
+                $psaTitleLower = strtolower($psaTitle->title);
+                return strpos($ebayTitleLower, $psaTitleLower) !== false;
+            });
+        });
+
+        if ($matchingCard) {
+            return $matchingCard;
+        }
+
+        // Fallback to old psa_title column for backward compatibility
         return static::whereNotNull('psa_title')
             ->where('excluded_from_sniping', false)
             ->get()

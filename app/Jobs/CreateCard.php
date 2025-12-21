@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Card;
+use App\Models\PsaTitle;
 use App\Models\Region;
 use App\Models\RegionCard;
 use App\Models\CardGroup;
@@ -63,9 +64,19 @@ class CreateCard implements ShouldQueue
                     $card->cr_price = intval(str_replace(',', '', $data['cr_price']));
                     $card->image_url = $data['image_url'];
                     if ($this->psaTitle) {
-                        $card->psa_title = $this->psaTitle;
+                        $card->psa_title = $this->psaTitle; // Keep for backward compatibility
                     }
                     $card->save();
+                    
+                    // Add PSA title to the new table if provided
+                    if ($this->psaTitle) {
+                        // Check if title already exists to avoid duplicates
+                        if (!$card->psaTitles()->where('title', $this->psaTitle)->exists()) {
+                            $card->psaTitles()->create([
+                                'title' => $this->psaTitle,
+                            ]);
+                        }
+                    }
 
                     if (
                         $card->cr_price < 700
@@ -81,8 +92,18 @@ class CreateCard implements ShouldQueue
                     $card = $existingCard;
                     // Update psa_title if provided and card doesn't have one
                     if ($this->psaTitle && !$card->psa_title) {
-                        $card->psa_title = $this->psaTitle;
+                        $card->psa_title = $this->psaTitle; // Keep for backward compatibility
                         $card->save();
+                    }
+                    
+                    // Add PSA title to the new table if provided
+                    if ($this->psaTitle) {
+                        // Check if title already exists to avoid duplicates
+                        if (!$card->psaTitles()->where('title', $this->psaTitle)->exists()) {
+                            $card->psaTitles()->create([
+                                'title' => $this->psaTitle,
+                            ]);
+                        }
                     }
                 }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Card;
+use App\Models\PsaTitle;
 use App\Models\Currency;
 use Illuminate\Http\Request;
 
@@ -39,8 +40,10 @@ class CardPsaTitleController extends Controller
         // Apply filters only if not searching
         if (!$request->has('q') || empty($request->get('q'))) {
             // Hide cards with PSA title (enabled by default)
+            // Check both old psa_title column and new psaTitles relationship
             if ($request->get('hide_with_title', '1') === '1') {
-                $query->whereNull('psa_title');
+                $query->whereNull('psa_title')
+                      ->whereDoesntHave('psaTitles');
             }
             
             // Hide excluded cards
@@ -126,7 +129,10 @@ class CardPsaTitleController extends Controller
         
         $cardQuery = Card::where(function($q) use ($query) {
             $q->where('psa_title', 'like', "%{$query}%")
-              ->orWhere('search_term', 'like', "%{$query}%");
+              ->orWhere('search_term', 'like', "%{$query}%")
+              ->orWhereHas('psaTitles', function($q2) use ($query) {
+                  $q2->where('title', 'like', "%{$query}%");
+              });
         });
         
         // Apply $200 USD price limit (same as index method)
@@ -155,10 +161,12 @@ class CardPsaTitleController extends Controller
      */
     public function getCard(Card $card)
     {
+        $card->load('psaTitles');
         return response()->json([
             'id' => $card->id,
             'search_term' => $card->search_term,
-            'psa_title' => $card->psa_title,
+            'psa_title' => $card->psa_title, // Keep for backward compatibility
+            'psa_titles' => $card->psaTitles->pluck('title')->toArray(),
             'excluded_from_sniping' => $card->excluded_from_sniping,
             'image_url' => $card->image_url,
         ]);
