@@ -290,6 +290,117 @@ class EbayService
     }
 
     /**
+     * Search for Buy It Now listings with PSA 10 in title
+     * Searches using the provided search term and filters for Buy It Now items with "PSA 10" in title
+     * 
+     * @param string $searchTerm The search term to use
+     * @return array Array of listings with lowest price first
+     */
+    public function searchPsa10BuyItNow($searchTerm)
+    {
+        // Find US region by marketplace ID
+        $region = Region::where('ebay_marketplace_id', 'EBAY_US')->first();
+        
+        if (!$region) {
+            Log::error('US region not found for PSA 10 Buy It Now search');
+            return [];
+        }
+
+        $url = 'https://api.ebay.com/buy/browse/v1/item_summary/search';
+        
+        // Build filter for Buy It Now items
+        $filter = 'buyingOptions:{FIXED_PRICE}';
+        
+        // Add seller filter for 'psa' seller
+        $filter .= ',sellers:{psa}';
+        
+        $queryParams = http_build_query([
+            'q' => $searchTerm . ' "PSA 10"',
+            'limit' => 50, // Get more results to find the lowest
+            'sort' => 'price', // Sort by price ascending
+            'filter' => $filter,
+        ]);
+        
+        $response = Http::withHeaders([
+            'X-EBAY-C-MARKETPLACE-ID' => $region->ebay_marketplace_id,
+            'X-EBAY-C-ENDUSERCTX' => $region->ebay_end_user_context,
+            'Authorization' => 'Bearer ' . $this->accessToken,
+        ])->get($url . '?' . $queryParams);
+
+        // Check for HTTP errors
+        if (!$response->successful()) {
+            Log::error('eBay API error in searchPsa10BuyItNow', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'search_term' => $searchTerm,
+                'url' => $url . '?' . $queryParams,
+            ]);
+            return [];
+        }
+
+        $data = $response->json();
+        $listings = [];
+
+        if (isset($data['itemSummaries'])) {
+            foreach ($data['itemSummaries'] as $item) {
+                // Verify it's a Buy It Now item
+                if (!isset($item['buyingOptions']) || !in_array('FIXED_PRICE', $item['buyingOptions'])) {
+                    continue;
+                }
+
+                // Verify title contains "PSA 10" (case insensitive) and exclude other grades
+                $title = strtolower($item['title'] ?? '');
+                
+                // Must contain "psa 10" as a phrase
+                if (strpos($title, 'psa 10') === false) {
+                    continue;
+                }
+                
+                // Exclude other PSA grades (PSA 9, PSA 8, PSA 7, etc.) to ensure we only get PSA 10
+                // Check for common patterns like "PSA 9", "PSA 8", "PSA-9", "PSA-8", etc.
+                $otherGrades = ['psa 9', 'psa 8', 'psa 7', 'psa 6', 'psa 5', 'psa 4', 'psa 3', 'psa 2', 'psa 1',
+                                'psa-9', 'psa-8', 'psa-7', 'psa-6', 'psa-5', 'psa-4', 'psa-3', 'psa-2', 'psa-1',
+                                'psa9', 'psa8', 'psa7', 'psa6', 'psa5', 'psa4', 'psa3', 'psa2', 'psa1'];
+                
+                foreach ($otherGrades as $grade) {
+                    if (strpos($title, $grade) !== false) {
+                        continue 2; // Skip this item if it contains another grade
+                    }
+                }
+                
+                // Get price including shipping
+                $price = 0;
+                $currency = 'USD';
+                
+                if (isset($item['price']['value'])) {
+                    $price = $item['price']['value'];
+                    $currency = $item['price']['currency'] ?? 'USD';
+                }
+
+                // Add shipping cost if available
+                if (isset($item['shippingOptions'][0]['shippingCost']['value'])) {
+                    $price += $item['shippingOptions'][0]['shippingCost']['value'];
+                }
+
+                $listings[] = [
+                    'itemId' => $item['itemId'] ?? '',
+                    'title' => $item['title'] ?? '',
+                    'price' => $price,
+                    'currency' => $currency,
+                    'url' => $item['itemWebUrl'] ?? '',
+                ];
+            }
+        }
+
+        // Sort by price ascending to get lowest first
+        usort($listings, function($a, $b) {
+            return $a['price'] <=> $b['price'];
+        });
+
+        return $listings;
+    }
+
+    /**
      * Get policy IDs from eBay Account API, create them if they don't exist
      */
     private function getPolicyIds($userToken)

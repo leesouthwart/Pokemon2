@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 use App\Models\PendingBid;
 use App\Models\User;
 use App\Models\Bid;
+use App\Models\Card;
+use App\Services\EbayService;
 use App\Jobs\SubmitBidToGixen;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -92,10 +94,11 @@ class ProcessPendingBids extends Command
 
         $jobsDispatched = 0;
         $delaySeconds = 0;
+        $ebayService = new EbayService();
 
         foreach ($pendingBids as $pendingBid) {
             // Skip if already cancelled
-            if ($pendingBid->status === 'cancelled due to low funds') {
+            if ($pendingBid->status === 'cancelled due to low funds' || $pendingBid->status === 'not_profitable') {
                 continue;
             }
 
@@ -106,6 +109,20 @@ class ProcessPendingBids extends Command
             if ($currentBid >= $pendingBid->bid_amount) {
                 $this->warn("Skipping pending bid {$pendingBid->id}: current bid {$currentBid} >= bid amount {$pendingBid->bid_amount}");
                 continue;
+            }
+
+            // Profitability check: Search for Buy It Now listings and verify profitability
+            $card = $pendingBid->card;
+            if ($card) {
+                $isProfitable = $this->checkProfitability($card, $pendingBid->bid_amount, $ebayService);
+                
+                if (!$isProfitable) {
+                    $this->warn("Skipping pending bid {$pendingBid->id}: Not profitable based on current Buy It Now prices");
+                    $pendingBid->update([
+                        'status' => 'not_profitable',
+                    ]);
+                    continue;
+                }
             }
 
             // Refresh user balance in case it changed
@@ -157,6 +174,67 @@ class ProcessPendingBids extends Command
         $this->info("Dispatched {$jobsDispatched} bid jobs with rate limiting");
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Check if a bid is profitable by searching for Buy It Now listings
+     * 
+     * @param Card $card The card to check
+     * @param float $bidAmount The bid amount to check profitability for
+     * @param EbayService $ebayService The eBay service instance
+     * @return bool True if profitable, false otherwise
+     */
+    private function checkProfitability(Card $card, float $bidAmount, EbayService $ebayService): bool
+    {
+        // Get all search terms: card search_term + all PSA titles
+        $searchTerms = [$card->search_term];
+        
+        // Add all PSA titles linked to this card
+        $card->load('psaTitles');
+        foreach ($card->psaTitles as $psaTitle) {
+            $searchTerms[] = $psaTitle->title;
+        }
+
+        $lowestPrice = null;
+
+        // Search for each term and find the lowest price
+        foreach ($searchTerms as $searchTerm) {
+            $listings = $ebayService->searchPsa10BuyItNow($searchTerm);
+            
+            if (!empty($listings)) {
+                // Listings are already sorted by price ascending
+                $firstListingPrice = $listings[0]['price'];
+                
+                if ($lowestPrice === null || $firstListingPrice < $lowestPrice) {
+                    $lowestPrice = $firstListingPrice;
+                }
+            }
+        }
+
+        // If no listings found, assume profitable (proceed with bid)
+        if ($lowestPrice === null) {
+            $this->info("No Buy It Now listings found for card {$card->id}, assuming profitable");
+            return true;
+        }
+
+        // Calculate profitability:
+        // lowest_price - 13% - ($3 if under $100) should be > bid_amount
+        $profitAfterFees = $lowestPrice * 0.87; // Subtract 13% (eBay fees)
+        
+        // If card is under $100, subtract additional $3
+        if ($lowestPrice < 100) {
+            $profitAfterFees -= 3;
+        }
+
+        $isProfitable = $profitAfterFees > $bidAmount;
+
+        if (!$isProfitable) {
+            $this->warn("Card {$card->id} not profitable: Lowest BIN: \${$lowestPrice}, After fees: \${$profitAfterFees}, Bid: \${$bidAmount}");
+        } else {
+            $this->info("Card {$card->id} is profitable: Lowest BIN: \${$lowestPrice}, After fees: \${$profitAfterFees}, Bid: \${$bidAmount}");
+        }
+
+        return $isProfitable;
     }
 }
 

@@ -98,6 +98,14 @@ class CreatePendingBids extends Command
                 continue;
             }
 
+            // Profitability check: Search for Buy It Now listings and verify profitability
+            $isProfitable = $this->checkProfitability($card, $bidAmount, $ebayService);
+            
+            if (!$isProfitable) {
+                $this->warn("Skipping card {$card->id}: Not profitable based on current Buy It Now prices");
+                continue;
+            }
+
             // Create pending bid
             PendingBid::create([
                 'card_id' => $card->id,
@@ -119,6 +127,58 @@ class CreatePendingBids extends Command
         $this->info("Updated {$pendingBidsUpdated} existing pending bids");
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Check if a bid is profitable by searching for Buy It Now listings
+     * 
+     * @param Card $card The card to check
+     * @param float $bidAmount The bid amount to check profitability for
+     * @param EbayService $ebayService The eBay service instance
+     * @return bool True if profitable, false otherwise
+     */
+    private function checkProfitability(Card $card, float $bidAmount, EbayService $ebayService): bool
+    {
+        // Get all search terms: card search_term + all PSA titles
+        $searchTerms = [$card->search_term];
+        
+        // Add all PSA titles linked to this card
+        $card->load('psaTitles');
+        foreach ($card->psaTitles as $psaTitle) {
+            $searchTerms[] = $psaTitle->title;
+        }
+
+        $lowestPrice = null;
+
+        // Search for each term and find the lowest price
+        foreach ($searchTerms as $searchTerm) {
+            $listings = $ebayService->searchPsa10BuyItNow($searchTerm);
+            
+            if (!empty($listings)) {
+                // Listings are already sorted by price ascending
+                $firstListingPrice = $listings[0]['price'];
+                
+                if ($lowestPrice === null || $firstListingPrice < $lowestPrice) {
+                    $lowestPrice = $firstListingPrice;
+                }
+            }
+        }
+
+        // If no listings found, assume profitable (proceed with bid)
+        if ($lowestPrice === null) {
+            return true;
+        }
+
+        // Calculate profitability:
+        // lowest_price - 13% - ($3 if under $100) should be > bid_amount
+        $profitAfterFees = $lowestPrice * 0.87; // Subtract 13% (eBay fees)
+        
+        // If card is under $100, subtract additional $3
+        if ($lowestPrice < 100) {
+            $profitAfterFees -= 3;
+        }
+
+        return $profitAfterFees > $bidAmount;
     }
 }
 

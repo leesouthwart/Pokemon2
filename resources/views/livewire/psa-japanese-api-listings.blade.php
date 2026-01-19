@@ -95,10 +95,10 @@
             </thead>
             <tbody class="divide-y divide-white/5">
                 @foreach($listings as $listing)
-                    <tr class="hover:bg-gray-800 {{ !($listing['hasMatchingCard'] ?? false) ? 'cursor-pointer' : '' }}" 
-                        @if(!($listing['hasMatchingCard'] ?? false))
-                            wire:click="openModal('{{ $listing['itemId'] }}')"
-                        @endif>
+                    <tr 
+                        class="hover:bg-gray-800 {{ !($listing['hasMatchingCard'] ?? false) ? 'cursor-pointer' : '' }}" 
+                        @if(!($listing['hasMatchingCard'] ?? false)) wire:click="openModal('{{ $listing['itemId'] }}')" @endif
+                    >
                         <td class="py-2 px-2">
                             <div class="flex items-center">
                                 <img src="{{ $listing['image'] }}" alt="{{ $listing['title'] }}" class="aspect-[4/5] h-24 object-contain">
