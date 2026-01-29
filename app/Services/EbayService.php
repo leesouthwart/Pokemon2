@@ -43,16 +43,20 @@ class EbayService
 
         if(isset($data['itemSummaries'])) {
             foreach ($data['itemSummaries'] as $item) {
+                $shippingCost = isset($item['shippingOptions'][0]['shippingCost']['value']) 
+                    ? $item['shippingOptions'][0]['shippingCost']['value'] 
+                    : 0;
+                
                 $items[] = [
                     'title' => $item['title'],
-                    'price' => number_format($item['price']['value'] + $item['shippingOptions'][0]['shippingCost']['value'] ?? 0, 2),
+                    'price' => number_format($item['price']['value'] + $shippingCost, 2),
                     'image' => $item['image']['imageUrl'],
                     'url' => $item['itemWebUrl'],
                     'seller' => $item['seller'],
                 ];
 
                 $itemCardPrice += $item['price']['value'];
-                $itemCardPrice += $item['shippingOptions'][0]['shippingCost']['value'] ?? 0;
+                $itemCardPrice += $shippingCost;
             }
 
             $averageItemCardPrice = number_format($itemCardPrice / count($data['itemSummaries']), 2);
@@ -99,12 +103,16 @@ class EbayService
 
         if(isset($data['itemSummaries'])) {
             foreach ($data['itemSummaries'] as $item) {
+                $shippingCost = isset($item['shippingOptions'][0]['shippingCost']['value']) 
+                    ? $item['shippingOptions'][0]['shippingCost']['value'] 
+                    : 0;
+                
                 $items[] = [
-                    'price' => $item['price']['value'] + $item['shippingOptions'][0]['shippingCost']['value'] ?? 0,
+                    'price' => $item['price']['value'] + $shippingCost,
                 ];
 
                 $itemCardPrice += $item['price']['value'];
-                $itemCardPrice += $item['shippingOptions'][0]['shippingCost']['value'] ?? 0;
+                $itemCardPrice += $shippingCost;
             }
 
             $averageItemCardPrice = number_format($itemCardPrice / 3, 2);
