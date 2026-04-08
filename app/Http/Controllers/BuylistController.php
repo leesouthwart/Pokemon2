@@ -12,7 +12,7 @@ class BuylistController extends Controller
     public function view(Buylist $buylist)
     {
         $cards = $buylist->cards()
-            ->where('in_stock', 1)
+            ->wherePivot('in_stock', 1)
             ->with('regionCards')
             ->get();
 

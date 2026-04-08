@@ -13,6 +13,7 @@ class Buylist extends Model
 
     public function cards()
     {
-        return $this->belongsToMany(Card::class);
+        return $this->belongsToMany(Card::class)
+            ->withPivot(['in_stock', 'card_group_id']);
     }
 }
