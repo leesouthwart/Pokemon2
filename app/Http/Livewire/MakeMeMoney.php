@@ -110,15 +110,22 @@ class MakeMeMoney extends Component
 
     public function cardGroupCompleted($event)
     {
-        // get the $this->selectedGroups element where id = $event['id']
-        // selectedGroups is an array of arrays
-        $this->completedGroups[] = $event['cardGroupId'];
+        $cardGroupId = $event['cardGroupId'] ?? null;
 
-        if(count($this->completedGroups) == count($this->selectedGroups)) {
+        // Null group id means fallback/extra-card phase has completed.
+        if ($cardGroupId === null) {
             $this->completed = true;
+            return;
         }
 
-        if($event == null) { // if event is null then the emitted group is the 'uncategorised' group aka extra cards
+        // Keep unique completed group IDs only.
+        if (!in_array($cardGroupId, $this->completedGroups, true)) {
+            $this->completedGroups[] = $cardGroupId;
+        }
+
+        // Only mark complete from selected groups when we have actually reached target size.
+        // If we are still under target, fallback jobs (if available) should continue.
+        if (count($this->completedGroups) >= count($this->selectedGroups) && $this->progress >= $this->total) {
             $this->completed = true;
         }
     }
