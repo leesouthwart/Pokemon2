@@ -27,11 +27,23 @@
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
-        
-                @foreach($cards as $card)
-                    <livewire:card :card="$card" :key="$card->id"  :wire:key="$card->id"/>
-                @endforeach
-        
+                @forelse($groupedCards as $group)
+                    <tr class="bg-white/5">
+                        <td colspan="9" class="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white sm:px-6 lg:px-8">
+                            {{ $group['name'] }}
+                        </td>
+                    </tr>
+
+                    @foreach($group['cards'] as $card)
+                        <livewire:card :card="$card" :key="$card->id . '-' . ($card->pivot->card_group_id ?? 'ungrouped')"  :wire:key="$card->id . '-' . ($card->pivot->card_group_id ?? 'ungrouped')"/>
+                    @endforeach
+                @empty
+                    <tr>
+                        <td colspan="9" class="px-4 py-6 text-sm text-gray-300 sm:px-6 lg:px-8">
+                            No in-stock cards found for this buylist.
+                        </td>
+                    </tr>
+                @endforelse
                 </tbody>
             </table>
         </div>
