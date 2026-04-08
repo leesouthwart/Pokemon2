@@ -13,6 +13,7 @@ use App\Models\Buylist;
 use App\Events\ProcessingBuyListCard;
 use App\Events\CardSuccessfullyAddedToBuylist;
 use App\Events\BuylistCardGroupCompleted;
+use Illuminate\Support\Facades\Log;
 
 class AddCardToBuylist implements ShouldQueue
 {
@@ -106,6 +107,7 @@ class AddCardToBuylist implements ShouldQueue
 
                 // No more cards in this cardGroup to check. Return, we're done here.
                 if (count($cards) === 0) {
+                    $this->logPhaseExhausted($this->cardGroupId, $this->amount, $successfullyAdded, 0);
                     event(new BuylistCardGroupCompleted($this->cardGroupId));
                     $this->dispatchFallbackIfNeeded();
                     return;
@@ -116,7 +118,7 @@ class AddCardToBuylist implements ShouldQueue
 
                 $cardIndex = 0;
                 foreach ($cards as $card) {
-                    dispatch(new AddCardToBuylist($card, $this->buylist, $toCheck, $this->cardGroupId, $cardIndex == count($cards) - 1));
+                    dispatch(new AddCardToBuylist($card, $this->buylist, $this->amount, $this->cardGroupId, $cardIndex == count($cards) - 1));
                     $cardIndex++;
                 }
             }
@@ -165,6 +167,8 @@ class AddCardToBuylist implements ShouldQueue
             if ($remainingInGroup > 0) {
                 return;
             }
+
+            $this->logPhaseExhausted($groupId, $target, $successful, $remainingInGroup);
         }
 
         $totalTarget = (int) $this->buylist->total_cards;
@@ -193,6 +197,7 @@ class AddCardToBuylist implements ShouldQueue
             ->toArray();
 
         if (count($fallbackCards) === 0) {
+            $this->logPhaseExhausted(null, $totalTarget, $totalSuccessful, 0);
             event(new BuylistCardGroupCompleted(null));
             return;
         }
@@ -205,5 +210,18 @@ class AddCardToBuylist implements ShouldQueue
             dispatch(new AddCardToBuylist($card, $this->buylist, $remainingNeeded, null, $cardIndex == count($cardsToDispatch) - 1));
             $cardIndex++;
         }
+    }
+
+    private function logPhaseExhausted($cardGroupId, int $target, int $successful, int $remainingCandidates): void
+    {
+        Log::warning('Buylist phase exhausted before target reached', [
+            'buylist_id' => $this->buylist->id,
+            'card_group_id' => $cardGroupId,
+            'target' => $target,
+            'successful' => $successful,
+            'remaining_needed' => max(0, $target - $successful),
+            'remaining_candidates' => $remainingCandidates,
+            'queue_job' => self::class,
+        ]);
     }
 }
