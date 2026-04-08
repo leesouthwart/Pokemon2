@@ -51,9 +51,6 @@ class MakeMeMoney extends Component
         $stockChecked = [];
         $cardList = [];
         $this->progress = 0;
-        $totalOfSelectedGroups = 0;
-        $totalOfSelectedGroups = array_sum(array_column($this->selectedGroups, 'amount'));
-
         $this->buylist = Buylist::create([
             'user_id' => auth()->user()->id,
             'name' => 'Buylist_' . date('Y-m-d'),
@@ -80,35 +77,12 @@ class MakeMeMoney extends Component
             // get the first X elements from the array where X is $groupData['amount'] * Random factor
             $picked = array_slice($cards, 0, $groupData['amount'] * $randomisationFactor);
 
-            // get X random elements from $picked where X is $groupData['amount']
-            $randomCards = collect($picked)->random($groupData['amount']);
+            // get up to X random elements from $picked where X is $groupData['amount']
+            $randomCards = collect($picked)->shuffle()->take($groupData['amount']);
 
             $cardIndex = 0;
             foreach($randomCards as $card) {
                 dispatch(new AddCardToBuylist($card, $this->buylist, $groupData['amount'], $groupData['id'], $cardIndex == count($randomCards) - 1));
-                $cardIndex++;
-            }
-        }
-
-        if($totalOfSelectedGroups < $this->total) {
-            $remaining = $this->total - $totalOfSelectedGroups;
-            $selectedGroupIds = array_column($this->selectedGroups, 'id');
-
-            $remainingCards = Card::where(function ($query) use ($selectedGroupIds) {
-                $query->whereHas('cardGroups', function ($query) use ($selectedGroupIds) {
-                    $query->whereNotIn('card_cardgroup.card_group_id', $selectedGroupIds);
-                })->orWhereDoesntHave('cardGroups');
-            })->with('regionCards')
-            ->get()
-            ->sortByDesc('roi')->toArray();
-
-            $picked = array_slice($remainingCards, 0, $remaining * 10);
-
-            $randomCards = collect($picked)->random($remaining * 4);
-
-            $cardIndex = 0;
-            foreach($randomCards as $card) {
-                dispatch(new AddCardToBuylist($card, $this->buylist, $remaining, null, $cardIndex == count($randomCards) - 1));
                 $cardIndex++;
             }
         }
