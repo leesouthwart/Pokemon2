@@ -84,8 +84,10 @@ class CreatePendingBids extends Command
                 continue;
             }
 
-            // Calculate bid amount
-            $bidAmount = $card->getBidPrice();
+            // Calculate bid amount:
+            // 1) Prefer PSA listing-based bid (15% target profit after fees) when at least 3 listings exist
+            // 2) Fall back to buy+grade bid price when listings are sparse
+            $bidAmount = $this->calculateBidAmount($card, $ebayService);
 
             if ($bidAmount <= 0) {
                 $this->warn("Card {$card->id} has invalid bid price, skipping");
@@ -95,14 +97,6 @@ class CreatePendingBids extends Command
             // Only create if bid amount is higher than current bid
             if ($bidAmount <= ($listing['currentBid'] ?? 0)) {
                 $this->warn("Bid amount {$bidAmount} is not higher than current bid " . ($listing['currentBid'] ?? 0) . " for item {$listing['itemId']}, skipping");
-                continue;
-            }
-
-            // Profitability check: Search for Buy It Now listings and verify profitability
-            $isProfitable = $this->checkProfitability($card, $bidAmount, $ebayService);
-            
-            if (!$isProfitable) {
-                $this->warn("Skipping card {$card->id}: Not profitable based on current Buy It Now prices");
                 continue;
             }
 
@@ -130,55 +124,86 @@ class CreatePendingBids extends Command
     }
 
     /**
-     * Check if a bid is profitable by searching for Buy It Now listings
-     * 
-     * @param Card $card The card to check
-     * @param float $bidAmount The bid amount to check profitability for
-     * @param EbayService $ebayService The eBay service instance
-     * @return bool True if profitable, false otherwise
+     * Calculate bid amount for a card.
+     *
+     * If there are at least 3 PSA 10 Buy It Now listings, use the lowest listing
+     * to derive a bid that targets 15% profit after selling fees.
+     * Otherwise, fall back to card buy+grade based bid price.
      */
-    private function checkProfitability(Card $card, float $bidAmount, EbayService $ebayService): bool
+    private function calculateBidAmount(Card $card, EbayService $ebayService): float
     {
-        // Get all search terms: card search_term + all PSA titles
+        $fallbackBidAmount = (float) $card->getBidPrice();
+
         $searchTerms = [$card->search_term];
-        
-        // Add all PSA titles linked to this card
         $card->load('psaTitles');
         foreach ($card->psaTitles as $psaTitle) {
             $searchTerms[] = $psaTitle->title;
         }
+        $searchTerms = array_values(array_unique(array_filter($searchTerms)));
 
         $lowestPrice = null;
+        $totalListings = 0;
 
-        // Search for each term and find the lowest price
         foreach ($searchTerms as $searchTerm) {
             $listings = $ebayService->searchPsa10BuyItNow($searchTerm);
-            
-            if (!empty($listings)) {
-                // Listings are already sorted by price ascending
-                $firstListingPrice = $listings[0]['price'];
-                
-                if ($lowestPrice === null || $firstListingPrice < $lowestPrice) {
-                    $lowestPrice = $firstListingPrice;
-                }
+            $listingCount = count($listings);
+            $totalListings += $listingCount;
+
+            if ($listingCount === 0) {
+                continue;
+            }
+
+            // Listings are sorted ascending, so index 0 is the cheapest for this term.
+            $firstListingPrice = (float) $listings[0]['price'];
+            if ($lowestPrice === null || $firstListingPrice < $lowestPrice) {
+                $lowestPrice = $firstListingPrice;
             }
         }
 
-        // If no listings found, assume profitable (proceed with bid)
-        if ($lowestPrice === null) {
-            return true;
+        if ($totalListings >= 3 && $lowestPrice !== null) {
+            $listingBasedBid = $this->calculateBidFromTargetProfit($lowestPrice, 0.15);
+            if ($listingBasedBid > 0) {
+                $this->info("Card {$card->id} using listing-based bid {$listingBasedBid} (lowest PSA 10 listing: \${$lowestPrice}, listings found: {$totalListings})");
+                return $listingBasedBid;
+            }
         }
 
-        // Calculate profitability:
-        // lowest_price - 13% - ($3 if under $100) should be > bid_amount
-        $profitAfterFees = $lowestPrice * 0.87; // Subtract 13% (eBay fees)
-        
-        // If card is under $100, subtract additional $3
-        if ($lowestPrice < 100) {
-            $profitAfterFees -= 3;
+        $this->info("Card {$card->id} using fallback buy+grade bid {$fallbackBidAmount} (PSA listing count: {$totalListings})");
+        return $fallbackBidAmount;
+    }
+
+    /**
+     * Derive max bid from expected sale price to preserve target profit after fees.
+     */
+    private function calculateBidFromTargetProfit(float $expectedSalePrice, float $targetProfitMargin): float
+    {
+        $netAfterFees = $this->calculateNetSaleAfterFees($expectedSalePrice);
+        if ($netAfterFees <= 0) {
+            return 0;
         }
 
-        return $profitAfterFees > $bidAmount;
+        // targetProfitMargin = (netAfterFees - bid) / bid
+        // => bid = netAfterFees / (1 + targetProfitMargin)
+        $maxBid = $netAfterFees / (1 + $targetProfitMargin);
+
+        // Keep bids conservative and whole-dollar for sniping.
+        return (float) floor($maxBid);
+    }
+
+    /**
+     * Existing fee model used in profitability checks:
+     * - 13% platform fees
+     * - Additional $3 on lower-priced sales (< $100)
+     */
+    private function calculateNetSaleAfterFees(float $salePrice): float
+    {
+        $net = $salePrice * 0.87;
+
+        if ($salePrice < 100) {
+            $net -= 3;
+        }
+
+        return $net;
     }
 }
 
