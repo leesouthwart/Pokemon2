@@ -343,7 +343,7 @@ class EbayService
                 'search_term' => $searchTerm,
                 'url' => $url . '?' . $queryParams,
             ]);
-            return ['unsuccesful' => true];
+            return [];
         }
 
         $data = $response->json();
@@ -386,6 +386,10 @@ class EbayService
                 // Add shipping cost if available
                 if (isset($item['shippingOptions'][0]['shippingCost']['value'])) {
                     $price += $item['shippingOptions'][0]['shippingCost']['value'];
+                }
+
+                if ((float) $price <= 0) {
+                    continue;
                 }
 
                 $listings[] = [

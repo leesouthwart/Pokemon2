@@ -141,35 +141,51 @@ class CreatePendingBids extends Command
         }
         $searchTerms = array_values(array_unique(array_filter($searchTerms)));
 
-        $lowestPrice = null;
-        $totalListings = 0;
-
+        // Merge results across search variants; count unique items only. Summing per-term
+        // counts inflated depth (same inventory counted many times) and forced listing-based
+        // bids that ignored the buy+grade ceiling.
+        $byItemId = [];
         foreach ($searchTerms as $searchTerm) {
             $listings = $ebayService->searchPsa10BuyItNow($searchTerm);
-
-            $listingCount = count($listings);
-            $totalListings += $listingCount;
-
-            if ($listingCount === 0) {
-                continue;
-            }
-
-            // Listings are sorted ascending, so index 0 is the cheapest for this term.
-            $firstListingPrice = (float) $listings[0]['price'];
-            if ($lowestPrice === null || $firstListingPrice < $lowestPrice) {
-                $lowestPrice = $firstListingPrice;
+            foreach ($listings as $row) {
+                $itemId = $row['itemId'] ?? '';
+                if ($itemId === '') {
+                    continue;
+                }
+                $price = (float) ($row['price'] ?? 0);
+                // Ignore rows with no usable price so a $0 parse does not wipe listing-based math.
+                if ($price <= 0) {
+                    continue;
+                }
+                if (!isset($byItemId[$itemId]) || $price < $byItemId[$itemId]) {
+                    $byItemId[$itemId] = $price;
+                }
             }
         }
 
-        if ($totalListings >= 3 && $lowestPrice !== null) {
+        $uniqueListingCount = count($byItemId);
+        $lowestPrice = null;
+        foreach ($byItemId as $price) {
+            if ($lowestPrice === null || $price < $lowestPrice) {
+                $lowestPrice = $price;
+            }
+        }
+
+        if ($uniqueListingCount >= 3 && $lowestPrice !== null && $lowestPrice > 0) {
             $listingBasedBid = $this->calculateBidFromTargetProfit($lowestPrice, 0.15);
             if ($listingBasedBid > 0) {
-                $this->info("Card {$card->id} using listing-based bid {$listingBasedBid} (lowest PSA 10 listing: \${$lowestPrice}, listings found: {$totalListings})");
-                return $listingBasedBid;
+                $cappedBid = min($listingBasedBid, $fallbackBidAmount);
+                if ($cappedBid < $listingBasedBid) {
+                    $this->info("Card {$card->id} listing-based bid {$listingBasedBid} capped to buy+grade max {$fallbackBidAmount} (lowest PSA 10 BIN: \${$lowestPrice}, unique listings: {$uniqueListingCount})");
+                } else {
+                    $this->info("Card {$card->id} using listing-based bid {$cappedBid} (lowest PSA 10 listing: \${$lowestPrice}, unique listings: {$uniqueListingCount})");
+                }
+
+                return $cappedBid;
             }
         }
 
-        $this->info("Card {$card->id} using fallback buy+grade bid {$fallbackBidAmount} (PSA listing count: {$totalListings})");
+        $this->info("Card {$card->id} using fallback buy+grade bid {$fallbackBidAmount} (unique PSA listings: {$uniqueListingCount})");
         return $fallbackBidAmount;
     }
 
