@@ -146,6 +146,7 @@ class CreatePendingBids extends Command
 
         foreach ($searchTerms as $searchTerm) {
             $listings = $ebayService->searchPsa10BuyItNow($searchTerm);
+
             $listingCount = count($listings);
             $totalListings += $listingCount;
 

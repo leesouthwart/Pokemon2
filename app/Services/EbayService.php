@@ -343,7 +343,7 @@ class EbayService
                 'search_term' => $searchTerm,
                 'url' => $url . '?' . $queryParams,
             ]);
-            return [];
+            return ['unsuccesful' => true];
         }
 
         $data = $response->json();
@@ -356,23 +356,21 @@ class EbayService
                     continue;
                 }
 
-                // Verify title contains "PSA 10" (case insensitive) and exclude other grades
+                // Verify title indicates PSA 10. Handle variants like:
+                // "PSA 10", "PSA-10", "PSA10", "PSA GEM MT 10".
                 $title = strtolower($item['title'] ?? '');
-                
-                // Must contain "psa 10" as a phrase
-                if (strpos($title, 'psa 10') === false) {
-                    continue;
-                }
-                
-                // Exclude other PSA grades (PSA 9, PSA 8, PSA 7, etc.) to ensure we only get PSA 10
-                // Check for common patterns like "PSA 9", "PSA 8", "PSA-9", "PSA-8", etc.
-                $otherGrades = ['psa 9', 'psa 8', 'psa 7', 'psa 6', 'psa 5', 'psa 4', 'psa 3', 'psa 2', 'psa 1',
-                                'psa-9', 'psa-8', 'psa-7', 'psa-6', 'psa-5', 'psa-4', 'psa-3', 'psa-2', 'psa-1',
-                                'psa9', 'psa8', 'psa7', 'psa6', 'psa5', 'psa4', 'psa3', 'psa2', 'psa1'];
-                
-                foreach ($otherGrades as $grade) {
-                    if (strpos($title, $grade) !== false) {
-                        continue 2; // Skip this item if it contains another grade
+
+                // Reject listings that explicitly mention PSA grade(s) but not PSA 10.
+                preg_match_all('/psa(?:\s|-)?([0-9]{1,2})\b/i', $title, $matches);
+                if (!empty($matches[1])) {
+                    $grades = array_map('intval', $matches[1]);
+                    if (!in_array(10, $grades, true)) {
+                        continue;
+                    }
+                } else {
+                    // Fallback for "PSA GEM MT 10" style where number isn't attached to PSA token.
+                    if (!preg_match('/\bpsa\b.*\b10\b/i', $title)) {
+                        continue;
                     }
                 }
                 
