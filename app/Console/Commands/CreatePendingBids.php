@@ -142,8 +142,7 @@ class CreatePendingBids extends Command
         $searchTerms = array_values(array_unique(array_filter($searchTerms)));
 
         // Merge results across search variants; count unique items only. Summing per-term
-        // counts inflated depth (same inventory counted many times) and forced listing-based
-        // bids that ignored the buy+grade ceiling.
+        // counts inflates depth by counting the same inventory many times.
         $byItemId = [];
         foreach ($searchTerms as $searchTerm) {
             $listings = $ebayService->searchPsa10BuyItNow($searchTerm);
@@ -174,14 +173,8 @@ class CreatePendingBids extends Command
         if ($uniqueListingCount >= 3 && $lowestPrice !== null && $lowestPrice > 0) {
             $listingBasedBid = $this->calculateBidFromTargetProfit($lowestPrice, 0.15);
             if ($listingBasedBid > 0) {
-                $cappedBid = min($listingBasedBid, $fallbackBidAmount);
-                if ($cappedBid < $listingBasedBid) {
-                    $this->info("Card {$card->id} listing-based bid {$listingBasedBid} capped to buy+grade max {$fallbackBidAmount} (lowest PSA 10 BIN: \${$lowestPrice}, unique listings: {$uniqueListingCount})");
-                } else {
-                    $this->info("Card {$card->id} using listing-based bid {$cappedBid} (lowest PSA 10 listing: \${$lowestPrice}, unique listings: {$uniqueListingCount})");
-                }
-
-                return $cappedBid;
+                $this->info("Card {$card->id} using listing-based bid {$listingBasedBid} (lowest PSA 10 listing: \${$lowestPrice}, unique listings: {$uniqueListingCount})");
+                return $listingBasedBid;
             }
         }
 
