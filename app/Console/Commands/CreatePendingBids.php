@@ -15,7 +15,7 @@ class CreatePendingBids extends Command
      *
      * @var string
      */
-    protected $signature = 'pending:create';
+    protected $signature = 'pending:create {--card= : Process only the card with this ID}';
 
     /**
      * The console command description.
@@ -44,10 +44,22 @@ class CreatePendingBids extends Command
             return Command::SUCCESS;
         }
 
+        $cardIdFilter = $this->option('card');
+
         // Get cards with PSA titles that aren't excluded
-        $cards = Card::whereNotNull('psa_title')
-            ->where('excluded_from_sniping', false)
-            ->get();
+        $cardsQuery = Card::whereNotNull('psa_title')
+            ->where('excluded_from_sniping', false);
+
+        if ($cardIdFilter !== null) {
+            $cardsQuery->where('id', $cardIdFilter);
+        }
+
+        $cards = $cardsQuery->get();
+
+        if ($cardIdFilter !== null && $cards->isEmpty()) {
+            $this->error("Card with ID {$cardIdFilter} not found, has no PSA title, or is excluded from sniping");
+            return Command::FAILURE;
+        }
 
         $this->info("Found {$cards->count()} cards with PSA titles");
 
@@ -64,6 +76,11 @@ class CreatePendingBids extends Command
             $card = Card::findByPsaTitle($listing['title']);
 
             if (!$card) {
+                continue;
+            }
+
+            // When filtering to a single card, skip listings that match other cards
+            if ($cardIdFilter !== null && (string) $card->id !== (string) $cardIdFilter) {
                 continue;
             }
 
