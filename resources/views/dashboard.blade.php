@@ -119,5 +119,53 @@
                   </svg>
                 </span>
             </div>
+
+            <div class="group relative bg-gray-700 p-6 border-l-gray-600 border-l-2 sm:border-l-0 sm:border-t-2 sm:border-t-gray-600">
+                <div>
+                  <span class="inline-flex rounded-lg bg-blue-50 p-3 text-blue-700 ring-4 ring-white">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
+                    </svg>
+                  </span>
+                </div>
+                <div class="mt-8">
+                    <h3 class="text-base font-semibold leading-6 text-white">
+                        <a href="{{ route('cards.bulk-import') }}" class="focus:outline-none">
+                            <span class="absolute inset-0" aria-hidden="true"></span>
+                            Bulk Import Cards
+                        </a>
+                    </h3>
+                    <p class="mt-2 text-sm text-gray-400">Paste a list of cards (search term + link) to import many at once.</p>
+                </div>
+                <span class="pointer-events-none absolute right-6 top-6 text-gray-400 group-hover:text-gray-300" aria-hidden="true">
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
+                  </svg>
+                </span>
+            </div>
+
+            <div class="group relative bg-gray-700 p-6 border-l-gray-600 border-l-2 sm:border-t-2 sm:border-t-gray-600">
+                <div>
+                  <span class="inline-flex rounded-lg bg-pink-50 p-3 text-pink-700 ring-4 ring-white">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </span>
+                </div>
+                <div class="mt-8">
+                    <h3 class="text-base font-semibold leading-6 text-white">
+                        <a href="{{ route('card_group.bulk-add') }}" class="focus:outline-none">
+                            <span class="absolute inset-0" aria-hidden="true"></span>
+                            Bulk Add to Card Groups
+                        </a>
+                    </h3>
+                    <p class="mt-2 text-sm text-gray-400">Create new card groups and bulk-assign cards to them.</p>
+                </div>
+                <span class="pointer-events-none absolute right-6 top-6 text-gray-400 group-hover:text-gray-300" aria-hidden="true">
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
+                  </svg>
+                </span>
+            </div>
     </div>
 </x-app-layout>

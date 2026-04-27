@@ -65,7 +65,13 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['currency.convert', 'auth'])->group(function () {
     Route::get('cardrush', [CardController::class, 'index'])->name('cardrush');
     Route::post('store_card', [CardController::class, 'store'])->name('card.store');
+    Route::get('cards/bulk-import', function () {
+        return view('cards.bulk-import');
+    })->name('cards.bulk-import');
     Route::get('group', [CardGroupController::class, 'index'])->name('card_group.index');
+    Route::get('group/bulk-add', function () {
+        return view('card_groups.bulk-add');
+    })->name('card_group.bulk-add');
     Route::get('group/{card_group}', [CardGroupController::class, 'view'])->name('card_group.single');
 
     Route::get('upload', [BatchController::class, 'create'])->name('batch.create');
