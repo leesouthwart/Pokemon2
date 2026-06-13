@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['currency.convert', 'auth'])->group(function () {
     Route::get('cardrush', [CardController::class, 'index'])->name('cardrush');
+    Route::get('cardrush-raw', [CardController::class, 'rawIndex'])->name('cardrush-raw');
     Route::post('store_card', [CardController::class, 'store'])->name('card.store');
     Route::get('cards/bulk-import', function () {
         return view('cards.bulk-import');

@@ -12,6 +12,7 @@ class MakeMeMoney extends Component
     public $groups;
     public $selectedGroups = [];
     public $completedGroups = [];
+    public $mode = 'graded';
 
     public $showModal = false;
     public $total = 50;
@@ -55,18 +56,20 @@ class MakeMeMoney extends Component
             'user_id' => auth()->user()->id,
             'name' => 'Buylist_' . date('Y-m-d'),
             'card_group_data' => json_encode($this->selectedGroups),
-            'total_cards' => $this->total
+            'total_cards' => $this->total,
+            'pricing_mode' => $this->mode,
         ]);
         
 
         foreach($this->selectedGroups as $groupData) {
             $cardList[$groupData['name']] = [];
+            $roiField = $this->mode === 'raw' ? 'raw_roi' : 'roi';
             $cards = Card::whereHas('cardGroups', function ($query) use ($groupData) {
                 $query->where('card_cardgroup.card_group_id', $groupData['id']);
             })
             ->with('regionCards')
             ->get()
-            ->sortByDesc('roi')->toArray();
+            ->sortByDesc($roiField)->toArray();
 
             $randomisationFactor = 2;
 

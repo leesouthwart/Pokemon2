@@ -42,12 +42,15 @@ class UpdateCard implements ShouldQueue
     
             foreach ($regions as $region) {
                 $this->ebayService->getEbayData($card->search_term, $region);
+                $this->ebayService->getRawEbayData($card->search_term, $region);
             }
+
+            $regionCard = $card->regionCards()->where('region_id', 1)->first();
 
             // freeze updating on cheap cards, low roi cards, very expensive cards, or cards with no ebay data
             if (
                 $card->cr_price < 700
-                || $card->regionCards()->where('region_id', 1)->first()->calcRoi($card->converted_price) < 0.3
+                || ($regionCard && $regionCard->calcRoi($card->converted_price) < 0.3)
                 || $card->cr_price > 27500
             ) {
                 $card->last_checked = now();
@@ -57,7 +60,10 @@ class UpdateCard implements ShouldQueue
                 $card->update_hold_until = now()->addDays(14);
             }
 
-            $card->roi_average = $card->regionCards()->where('region_id', 1)->first()->calcRoi($card->converted_price);
+            if ($regionCard) {
+                $card->roi_average = $regionCard->calcRoi($card->converted_price);
+                $card->raw_roi_average = $regionCard->calcRawRoi($card->converted_price);
+            }
 
             $card->save();
 

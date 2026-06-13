@@ -8,10 +8,16 @@
                     <col class="w-full sm:w-1/12">
                     <col class="lg:w-4/12">
                     <col class="lg:w-4/12">
+                    @if(($buylist->pricing_mode ?? 'graded') === 'graded')
+                    <col class="lg:w-1/12">
+                    @endif
                     <col class="lg:w-1/12">
                     <col class="lg:w-1/12">
                     <col class="lg:w-1/12">
+                    @if(($buylist->pricing_mode ?? 'graded') === 'raw')
                     <col class="lg:w-1/12">
+                    <col class="lg:w-1/12">
+                    @endif
                     <col class="lg:w-1/12">
                 </colgroup>
                 <thead class="border-b border-white/10 text-sm leading-6 text-white">
@@ -19,27 +25,35 @@
                     <th scope="col" class="py-2 px-2 font-semibold"></th>
                     <th scope="col" class="py-2 px-2 font-semibold"></th>
                     <th scope="col" class="py-2 pl-4 pr-8 font-semibold sm:pl-6 lg:pl-8 cursor-pointer">Card Name</th>
-                    <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell cursor-pointer">Raw Price</th>
+                    <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell cursor-pointer">Buy Price</th>
+                    @if(($buylist->pricing_mode ?? 'graded') === 'graded')
                     <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20 cursor-pointer">PSA 10 (lowest)</th>
                     <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold md:table-cell lg:pr-20 cursor-pointer">PSA 10 (average)</th>
                     <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">ROI</th>
+                    @else
+                    <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20 cursor-pointer">Raw eBay (lowest)</th>
+                    <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold md:table-cell lg:pr-20 cursor-pointer">Raw eBay (average)</th>
+                    <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">Raw ROI</th>
+                    <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">PSA 10 (lowest)</th>
+                    <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">Graded ROI</th>
+                    @endif
                     <th scope="col" class="hidden py-2 pl-0 pr-4 text-right font-semibold sm:table-cell sm:pr-6 lg:pr-8">Actions</th>
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
                 @forelse($groupedCards as $group)
                     <tr class="bg-white/5">
-                        <td colspan="9" class="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white sm:px-6 lg:px-8">
+                        <td colspan="11" class="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white sm:px-6 lg:px-8">
                             {{ $group['name'] }}
                         </td>
                     </tr>
 
                     @foreach($group['cards'] as $card)
-                        <livewire:card :card="$card" :key="$card->id . '-' . ($card->pivot->card_group_id ?? 'ungrouped')"  :wire:key="$card->id . '-' . ($card->pivot->card_group_id ?? 'ungrouped')"/>
+                        <livewire:card :card="$card" :mode="$buylist->pricing_mode ?? 'graded'" :key="$card->id . '-' . ($card->pivot->card_group_id ?? 'ungrouped')"  :wire:key="$card->id . '-' . ($card->pivot->card_group_id ?? 'ungrouped')"/>
                     @endforeach
                 @empty
                     <tr>
-                        <td colspan="9" class="px-4 py-6 text-sm text-gray-300 sm:px-6 lg:px-8">
+                        <td colspan="11" class="px-4 py-6 text-sm text-gray-300 sm:px-6 lg:px-8">
                             No in-stock cards found for this buylist.
                         </td>
                     </tr>
@@ -48,7 +62,7 @@
             </table>
         </div>
 
-        <livewire:sidebar />
+        <livewire:sidebar :mode="$buylist->pricing_mode ?? 'graded'" />
 
     </div>
 </x-app-layout>

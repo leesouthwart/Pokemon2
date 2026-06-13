@@ -31,59 +31,147 @@ class EbayService
 
         // @todo figure out a better way to always have PSA 10 in the search term WITHOUT saving it in DB (as this would change front end forms)
         $searchTermEbay = $searchTerm . ' PSA 10';
-        $response = Http::withHeaders([
-            'X-EBAY-C-MARKETPLACE-ID' => $region->ebay_marketplace_id,
-            'X-EBAY-C-ENDUSERCTX' => $region->ebay_end_user_context,
-            'Authorization' => 'Bearer ' . $this->accessToken,
-        ])->get('https://api.ebay.com/buy/browse/v1/item_summary/search?q=' . $searchTermEbay .'&limit=5&sort=price&filter=itemLocationCountry:' . $region->ebay_country_code);
-
-        $data = $response->json();
-
-        $itemCardPrice = 0;
-
-        if(isset($data['itemSummaries'])) {
-            foreach ($data['itemSummaries'] as $item) {
-                $shippingCost = isset($item['shippingOptions'][0]['shippingCost']['value']) 
-                    ? $item['shippingOptions'][0]['shippingCost']['value'] 
-                    : 0;
-                
-                $items[] = [
-                    'title' => $item['title'],
-                    'price' => number_format($item['price']['value'] + $shippingCost, 2),
-                    'image' => $item['image']['imageUrl'],
-                    'url' => $item['itemWebUrl'],
-                    'seller' => $item['seller'],
-                ];
-
-                $itemCardPrice += $item['price']['value'];
-                $itemCardPrice += $shippingCost;
-            }
-
-            $averageItemCardPrice = number_format($itemCardPrice / count($data['itemSummaries']), 2);
-            $lowestItemCardPrice = min(array_map(function($item) {
-                return floatval(str_replace(',', '', $item['price']));
-            }, $items));
-
-        }
+        $items = $this->searchEbayListings($searchTermEbay, $region);
 
         $cardModel = Card::where('search_term', $searchTerm)->first();
 
         if ($cardModel) {
+            $prices = $this->calculateListingPrices($items);
             RegionCard::updateOrCreate(
                 [
                     'card_id' => $cardModel->id,
                     'region_id' => $region->id,
                 ],
                 [
-                    'psa_10_price' => isset($lowestItemCardPrice) ? floatval(str_replace(',', '', $lowestItemCardPrice)) : 0,
-                    'average_psa_10_price' => isset($averageItemCardPrice) ? floatval(str_replace(',', '', $averageItemCardPrice)) : 0,
+                    'psa_10_price' => $prices['lowest'],
+                    'average_psa_10_price' => $prices['average'],
                 ]
             );
         } else {
             Log::error('Card not found for ' . $searchTerm);
         }
 
-        return $items ?? [];
+        return $items;
+    }
+
+    /**
+     * Fetch ungraded eBay comps for a card and store raw_price on region_cards.
+     */
+    public function getRawEbayData($searchTerm, Region $region)
+    {
+        if (!$region) {
+            Log::error('Region not found for raw eBay search');
+            return [];
+        }
+
+        $items = $this->searchEbayListings($searchTerm, $region, function ($title) {
+            return !$this->isGradedListing($title);
+        }, 50);
+
+        $cardModel = Card::where('search_term', $searchTerm)->first();
+
+        if ($cardModel) {
+            $prices = $this->calculateListingPrices($items);
+            RegionCard::updateOrCreate(
+                [
+                    'card_id' => $cardModel->id,
+                    'region_id' => $region->id,
+                ],
+                [
+                    'raw_price' => $prices['lowest'],
+                    'average_raw_price' => $prices['average'],
+                ]
+            );
+        } else {
+            Log::error('Card not found for raw eBay search: ' . $searchTerm);
+        }
+
+        return $items;
+    }
+
+    private function searchEbayListings($searchTerm, Region $region, ?callable $titleFilter = null, int $limit = 5)
+    {
+        $response = Http::withHeaders([
+            'X-EBAY-C-MARKETPLACE-ID' => $region->ebay_marketplace_id,
+            'X-EBAY-C-ENDUSERCTX' => $region->ebay_end_user_context,
+            'Authorization' => 'Bearer ' . $this->accessToken,
+        ])->get('https://api.ebay.com/buy/browse/v1/item_summary/search?q=' . $searchTerm .'&limit=' . $limit . '&sort=price&filter=itemLocationCountry:' . $region->ebay_country_code);
+
+        $data = $response->json();
+        $items = [];
+
+        if (!isset($data['itemSummaries'])) {
+            return $items;
+        }
+
+        foreach ($data['itemSummaries'] as $item) {
+            $title = $item['title'] ?? '';
+
+            if ($titleFilter && !$titleFilter($title)) {
+                continue;
+            }
+
+            $shippingCost = isset($item['shippingOptions'][0]['shippingCost']['value'])
+                ? $item['shippingOptions'][0]['shippingCost']['value']
+                : 0;
+
+            $items[] = [
+                'title' => $title,
+                'price' => number_format($item['price']['value'] + $shippingCost, 2),
+                'image' => $item['image']['imageUrl'],
+                'url' => $item['itemWebUrl'],
+                'seller' => $item['seller'],
+            ];
+
+            if (count($items) >= 5) {
+                break;
+            }
+        }
+
+        return $items;
+    }
+
+    private function calculateListingPrices(array $items)
+    {
+        if (empty($items)) {
+            return ['lowest' => 0, 'average' => 0];
+        }
+
+        $prices = array_map(function ($item) {
+            return floatval(str_replace(',', '', $item['price']));
+        }, $items);
+
+        return [
+            'lowest' => min($prices),
+            'average' => floatval(number_format(array_sum($prices) / count($prices), 2)),
+        ];
+    }
+
+    private function isGradedListing($title)
+    {
+        $title = strtolower($title);
+
+        if (preg_match('/\bpsa\b/', $title)) {
+            return true;
+        }
+
+        if (preg_match('/\bbgs\b/', $title)) {
+            return true;
+        }
+
+        if (preg_match('/\bcgc\b/', $title)) {
+            return true;
+        }
+
+        if (preg_match('/\bace\b/', $title) && preg_match('/\bgrading\b/', $title)) {
+            return true;
+        }
+
+        if (strpos($title, 'graded') !== false) {
+            return true;
+        }
+
+        return false;
     }
 
 

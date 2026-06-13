@@ -29,7 +29,7 @@ class Card extends Model
         'old_cr_price'
     ];
 
-    public $appends = ['roi'];
+    public $appends = ['roi', 'raw_roi'];
 
     public function regionCards()
     {
@@ -138,7 +138,22 @@ class Card extends Model
     {
         $cardRegion = RegionCard::where('card_id', $this->id)->where('region_id', 1)->first();
 
+        if (!$cardRegion) {
+            return 0;
+        }
+
         return $cardRegion->calcRoi($this->converted_price);
+    }
+
+    public function getRawRoiAttribute()
+    {
+        $cardRegion = RegionCard::where('card_id', $this->id)->where('region_id', 1)->first();
+
+        if (!$cardRegion) {
+            return 0;
+        }
+
+        return $cardRegion->calcRawRoi($this->converted_price);
     }
 
     /**

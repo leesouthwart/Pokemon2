@@ -28,6 +28,16 @@ class CardList extends Component
     public $selectedCardGroupId = 0;
     public $groups;
     public $cardGroup;
+    public $mode = 'graded';
+
+    public function mount($mode = 'graded')
+    {
+        $this->mode = $mode;
+
+        if ($this->mode === 'raw') {
+            $this->sortField = 'raw_roi_average';
+        }
+    }
 
     protected $listeners = [
         'selectedCard' => 'handleSelectedCard',

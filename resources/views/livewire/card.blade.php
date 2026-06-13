@@ -20,6 +20,8 @@
             <div class="font-mono text-sm leading-6 text-gray-400">{{$currency->symbol}}{{$card->converted_price}}</div>
         </div>
     </td>
+
+    @if($mode === 'graded')
     <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
         <div class="flex gap-x-3">
             <div class="font-mono text-sm leading-6 text-gray-400">
@@ -34,7 +36,7 @@
     <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
         <div class="flex gap-x-3">
             <div class="font-mono text-sm leading-6 text-gray-400">
-                @if($psa10Prices[\App\Models\Region::GB] == 0)
+                @if(($psa10Prices[\App\Models\Region::GB] ?? 0) == 0)
                     <i class="fas fa-exclamation-triangle text-red-500"></i>
                 @else
                 {{$currency->symbol}}{{$psa10Prices[\App\Models\Region::GB]}}
@@ -45,7 +47,7 @@
     <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
         <div class="flex gap-x-3">
             <div class="font-mono text-sm leading-6 text-gray-400">
-                @if($psa10Prices[\App\Models\Region::GB] == 0)
+                @if(($psa10Prices[\App\Models\Region::GB] ?? 0) == 0)
                     <i class="fas fa-exclamation-triangle text-red-500"></i>
                 @else
                     {{$currency->symbol}}{{$averagePsa10Prices[\App\Models\Region::GB]}}
@@ -56,7 +58,7 @@
     <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
         <div class="flex gap-x-3">
             <div class="font-mono text-sm leading-6 {{$roiLowestColor}}">
-                @if($rois[\App\Models\Region::GB] == 0)
+                @if(($rois[\App\Models\Region::GB] ?? 0) == 0)
                     <i class="fas fa-exclamation-triangle text-red-500"></i>
                 @else
                 {{$rois[\App\Models\Region::GB]}}%
@@ -64,6 +66,63 @@
             </div>
         </div>
     </td>
+    @else
+    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
+        <div class="flex gap-x-3">
+            <div class="font-mono text-sm leading-6 text-gray-400">
+                @if(($rawPrices[\App\Models\Region::GB] ?? 0) == 0)
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                @else
+                    {{$currency->symbol}}{{$rawPrices[\App\Models\Region::GB]}}
+                @endif
+            </div>
+        </div>
+    </td>
+    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
+        <div class="flex gap-x-3">
+            <div class="font-mono text-sm leading-6 text-gray-400">
+                @if(($rawPrices[\App\Models\Region::GB] ?? 0) == 0)
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                @else
+                    {{$currency->symbol}}{{$averageRawPrices[\App\Models\Region::GB]}}
+                @endif
+            </div>
+        </div>
+    </td>
+    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
+        <div class="flex gap-x-3">
+            <div class="font-mono text-sm leading-6 {{$roiLowestColor}}">
+                @if(($rois[\App\Models\Region::GB] ?? 0) == 0)
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                @else
+                    {{$rois[\App\Models\Region::GB]}}%
+                @endif
+            </div>
+        </div>
+    </td>
+    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
+        <div class="flex gap-x-3">
+            <div class="font-mono text-sm leading-6 text-gray-500">
+                @if(($psa10Prices[\App\Models\Region::GB] ?? 0) == 0)
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                @else
+                    {{$currency->symbol}}{{$psa10Prices[\App\Models\Region::GB]}}
+                @endif
+            </div>
+        </div>
+    </td>
+    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
+        <div class="flex gap-x-3">
+            <div class="font-mono text-sm leading-6 text-gray-500">
+                @if($gradedRoi == 0)
+                    <i class="fas fa-exclamation-triangle text-red-500"></i>
+                @else
+                    {{ $gradedRoi }}%
+                @endif
+            </div>
+        </div>
+    </td>
+    @endif
 
     <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8">
         <a target="_blank" href="{{$card->url}}">

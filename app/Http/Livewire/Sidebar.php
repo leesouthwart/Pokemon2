@@ -16,6 +16,7 @@ class Sidebar extends Component
     public bool $loading = false;
     protected EbayService|null $ebayService = null;
     public bool $show = false;
+    public $mode = 'graded';
 
     public $listeners = ['cardSelected'];
 
@@ -36,7 +37,11 @@ class Sidebar extends Component
         $this->card = Card::find($card);
 
         if (!isset($this->ebayData[$this->card->id])) {
-            $this->ebayData[$this->card->id] = $this->ebayService->getEbayData($this->card->search_term, Region::find(Region::GB));
+            if ($this->mode === 'raw') {
+                $this->ebayData[$this->card->id] = $this->ebayService->getRawEbayData($this->card->search_term, Region::find(Region::GB));
+            } else {
+                $this->ebayData[$this->card->id] = $this->ebayService->getEbayData($this->card->search_term, Region::find(Region::GB));
+            }
         }
 
         $this->loading = false;

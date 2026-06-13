@@ -88,7 +88,7 @@ class AddCardToBuylist implements ShouldQueue
                         ->with('regionCards')
                         ->get()
                         ->filter(function ($card) {
-                            return $card->roi > 40;
+                            return $this->cardRoi($card) > 40;
                         })
                         ->shuffle()
                         ->values()
@@ -100,7 +100,9 @@ class AddCardToBuylist implements ShouldQueue
                     ->whereNotIn('cards.id', $ids)
                     ->with('regionCards')
                     ->get()
-                    ->sortByDesc('roi')
+                    ->sortByDesc(function ($card) {
+                        return $this->cardRoi($card);
+                    })
                     ->values()
                     ->toArray();
                 }
@@ -190,7 +192,7 @@ class AddCardToBuylist implements ShouldQueue
             ->with('regionCards')
             ->get()
             ->filter(function ($card) {
-                return $card->roi > 40;
+                return $this->cardRoi($card) > 40;
             })
             ->shuffle()
             ->values()
@@ -223,5 +225,14 @@ class AddCardToBuylist implements ShouldQueue
             'remaining_candidates' => $remainingCandidates,
             'queue_job' => self::class,
         ]);
+    }
+
+    private function cardRoi(Card $card): float
+    {
+        if ($this->buylist->pricing_mode === 'raw') {
+            return (float) $card->raw_roi;
+        }
+
+        return (float) $card->roi;
     }
 }

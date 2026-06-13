@@ -14,10 +14,14 @@ class Card extends Component
     public CardModel $card;
     public $searchTerm;
     public $roiLowestColor;
+    public $mode = 'graded';
 
     public $psa10Prices = [];
     public $averagePsa10Prices = [];
+    public $rawPrices = [];
+    public $averageRawPrices = [];
     public $rois = [];
+    public $gradedRoi = 0;
 
     public $listeners = ['cardUpdated', 'unselect'];
     public $selected = false;
@@ -25,9 +29,10 @@ class Card extends Component
     public $bidPrice;
 
 
-    public function mount($card)
+    public function mount($card, $mode = 'graded')
     {
         $this->card = $card;
+        $this->mode = $mode;
         $this->searchTerm = $this->card->search_term;
         $this->setUpPrices();
         $this->calculateColours();
@@ -68,15 +73,29 @@ class Card extends Component
     public function cardUpdated($card)
     {
         if($this->card->id == $card['id']) {
-            $this->mount(CardModel::find($card['id']));
+            $this->mount(CardModel::find($card['id']), $this->mode);
         }
     }
 
     public function setUpPrices()
     {
-        $this->psa10Prices[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->psa_10_price;
-        $this->averagePsa10Prices[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->average_psa_10_price;
-        $this->rois[Region::GB] = $this->card->regionCards()->where('region_id', Region::GB)->first()->calcRoi($this->card->converted_price);
+        $regionCard = $this->card->regionCards()->where('region_id', Region::GB)->first();
+
+        if (!$regionCard) {
+            return;
+        }
+
+        $this->psa10Prices[Region::GB] = $regionCard->psa_10_price;
+        $this->averagePsa10Prices[Region::GB] = $regionCard->average_psa_10_price;
+        $this->rawPrices[Region::GB] = $regionCard->raw_price;
+        $this->averageRawPrices[Region::GB] = $regionCard->average_raw_price;
+
+        if ($this->mode === 'raw') {
+            $this->rois[Region::GB] = $regionCard->calcRawRoi($this->card->converted_price);
+            $this->gradedRoi = $regionCard->calcRoi($this->card->converted_price);
+        } else {
+            $this->rois[Region::GB] = $regionCard->calcRoi($this->card->converted_price);
+        }
     }
 
     public function calculateBidPrice()

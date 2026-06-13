@@ -14,6 +14,8 @@ class RegionCard extends Model
         'card_id',
         'psa_10_price',
         'average_psa_10_price',
+        'raw_price',
+        'average_raw_price',
     ];
 
     public function region()
@@ -56,6 +58,25 @@ class RegionCard extends Model
         // Calculate ROI
         // ROI formula: ((Final Value - Initial Value) / Initial Value) * 100
         $roi = (($afterFees - $initialPrice) / $initialPrice) * 100;
+
+        return str_replace(',', '', number_format($roi, 2));
+    }
+
+    /**
+     * ROI for buying raw on Cardrush and selling ungraded on eBay (no grading cost).
+     */
+    public function calcRawRoi($price)
+    {
+        if ($this->raw_price == 0) {
+            return 0;
+        }
+
+        $price = floatval($price);
+
+        $afterFees = $this->raw_price - ((auth()->user()->ebay_fee ?? 0.155) * $this->raw_price);
+        $afterFees -= auth()->user() ? auth()->user()->shipping_cost : 3;
+
+        $roi = (($afterFees - $price) / $price) * 100;
 
         return str_replace(',', '', number_format($roi, 2));
     }

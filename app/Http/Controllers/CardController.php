@@ -13,6 +13,11 @@ class CardController extends Controller
         return view('cards.index');
     }
 
+    public function rawIndex(Request $request)
+    {
+        return view('cards.raw-index');
+    }
+
     public function create()
     {
         return view('cards.create');

@@ -5,12 +5,16 @@
                 <livewire:card-form />
             </div>
 
+            <div class="border-b border-gray-700 px-4 py-2 flex justify-end">
+                <a href="{{ route('cardrush-raw') }}" class="text-sm text-indigo-400 hover:text-indigo-300">View ungraded (raw) list &rarr;</a>
+            </div>
+
             <div>
-                <livewire:card-list />
+                <livewire:card-list mode="graded" />
             </div>
         </div>
 
-        <livewire:sidebar />
+        <livewire:sidebar mode="graded" />
 
     </div>
 </x-app-layout>

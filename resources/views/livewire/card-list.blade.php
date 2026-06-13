@@ -14,7 +14,7 @@
         
             <div class="flex ml-auto">
                 
-                <livewire:make-me-money :groups="$groups"/>
+                <livewire:make-me-money :groups="$groups" :mode="$mode"/>
                 
 
                 @if(!empty($selectedCards))
@@ -40,10 +40,16 @@
             <col class="w-full sm:w-1/12">
             <col class="lg:w-4/12">
             <col class="lg:w-4/12">
+            @if($mode === 'graded')
+            <col class="lg:w-1/12">
+            @endif
             <col class="lg:w-1/12">
             <col class="lg:w-1/12">
             <col class="lg:w-1/12">
+            @if($mode === 'raw')
             <col class="lg:w-1/12">
+            <col class="lg:w-1/12">
+            @endif
             <col class="lg:w-1/12">
             <col class="lg:w-1/12">
         </colgroup>
@@ -52,18 +58,26 @@
             <th scope="col" class="py-2 px-2 font-semibold"></th>
             <th scope="col" class="py-2 px-2 font-semibold"></th>
             <th scope="col" class="py-2 pl-4 pr-8 font-semibold sm:pl-6 lg:pl-8 cursor-pointer" wire:click="sortBy('search_term')">Card Name</th>
-            <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell cursor-pointer" wire:click="sortBy('cr_price')">Raw Price</th>
+            <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell cursor-pointer" wire:click="sortBy('cr_price')">Buy Price</th>
+            @if($mode === 'graded')
             <th scope="col" class="hidden py-2 pl-0 pr-4 text-right font-semibold sm:table-cell sm:pr-6 lg:pr-8">Bid Price (USD)</th>
             <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20 cursor-pointer" wire:click="sortBy('region_cards.psa_10_price')">PSA 10 (lowest)</th>
             <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold md:table-cell lg:pr-20 cursor-pointer" wire:click="sortBy('region_cards.average_psa_10_price')">PSA 10 (average)</th>
             <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8 cursor-pointer" wire:click="sortBy('cards.roi_average')">ROI</th>
+            @else
+            <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20 cursor-pointer" wire:click="sortBy('region_cards.raw_price')">Raw eBay (lowest)</th>
+            <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold md:table-cell lg:pr-20 cursor-pointer" wire:click="sortBy('region_cards.average_raw_price')">Raw eBay (average)</th>
+            <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8 cursor-pointer" wire:click="sortBy('cards.raw_roi_average')">Raw ROI</th>
+            <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8 cursor-pointer" wire:click="sortBy('region_cards.psa_10_price')">PSA 10 (lowest)</th>
+            <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8 cursor-pointer" wire:click="sortBy('cards.roi_average')">Graded ROI</th>
+            @endif
             <th scope="col" class="hidden py-2 pl-0 pr-4 text-right font-semibold sm:table-cell sm:pr-6 lg:pr-8">Actions</th>
         </tr>
         </thead>
         <tbody class="divide-y divide-white/5">
 
         @foreach($cardList as $card)
-            <livewire:card :card="$card" :key="$card->id"  :wire:key="$card->id"/>
+            <livewire:card :card="$card" :mode="$mode" :key="$card->id . '-' . $mode"  :wire:key="$card->id . '-' . $mode"/>
         @endforeach
 
         </tbody>

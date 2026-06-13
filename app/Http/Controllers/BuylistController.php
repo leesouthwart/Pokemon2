@@ -108,6 +108,7 @@ class BuylistController extends Controller
 
         return view('buylist.view', [
             'groupedCards' => $groupedCards,
+            'buylist' => $buylist,
         ]);
     }
 }

@@ -108,8 +108,14 @@ class CreateCard implements ShouldQueue
                 }
 
                 $this->ebayService->getEbayData($this->searchTerm, $region);
+                $this->ebayService->getRawEbayData($this->searchTerm, $region);
 
-                $card->roi_average = $card->regionCards()->where('region_id', 1)->first()->calcRoi($card->converted_price);
+                $regionCard = $card->regionCards()->where('region_id', 1)->first();
+
+                if ($regionCard) {
+                    $card->roi_average = $regionCard->calcRoi($card->converted_price);
+                    $card->raw_roi_average = $regionCard->calcRawRoi($card->converted_price);
+                }
 
                 $card->save();
 
