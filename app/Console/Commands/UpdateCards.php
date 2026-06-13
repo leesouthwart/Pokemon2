@@ -14,7 +14,7 @@ class UpdateCards extends Command
      *
      * @var string
      */
-    protected $signature = 'app:update-cards';
+    protected $signature = 'app:update-cards {--force : Ignore hold dates and queue up to 80 random cards}';
 
     /**
      * The console command description.
@@ -28,12 +28,16 @@ class UpdateCards extends Command
      */
     public function handle()
     {
-        $cards = Card::where('update_hold_until', '<=', now())
-            ->inRandomOrder()
-            ->take(80)
-            ->get();
-        
-        foreach($cards as $card) {
+        $query = $this->option('force')
+            ? Card::query()
+            : Card::dueForUpdate();
+
+        $eligible = (clone $query)->count();
+        $cards = $query->inRandomOrder()->take(80)->get();
+
+        $this->info("Eligible cards: {$eligible}. Dispatching {$cards->count()} update jobs.");
+
+        foreach ($cards as $card) {
             dispatch(new UpdateCard($card));
         }
 

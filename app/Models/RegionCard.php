@@ -59,7 +59,7 @@ class RegionCard extends Model
         // ROI formula: ((Final Value - Initial Value) / Initial Value) * 100
         $roi = (($afterFees - $initialPrice) / $initialPrice) * 100;
 
-        return str_replace(',', '', number_format($roi, 2));
+        return self::clampForStorage($roi);
     }
 
     /**
@@ -78,6 +78,16 @@ class RegionCard extends Model
 
         $roi = (($afterFees - $price) / $price) * 100;
 
-        return str_replace(',', '', number_format($roi, 2));
+        return self::clampForStorage($roi);
+    }
+
+    /**
+     * Clamp ROI to a value that fits cards.roi_average / raw_roi_average columns.
+     */
+    public static function clampForStorage($roi): string
+    {
+        $roi = max(-99999999.99, min(99999999.99, (float) $roi));
+
+        return str_replace(',', '', number_format($roi, 2, '.', ''));
     }
 }

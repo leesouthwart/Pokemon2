@@ -36,6 +36,14 @@ class Card extends Model
         return $this->hasMany(RegionCard::class);
     }
 
+    public function scopeDueForUpdate($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('update_hold_until')
+                ->orWhereDate('update_hold_until', '<=', today());
+        });
+    }
+
     public function cardGroups(): BelongsToMany
     {
         return $this->belongsToMany(CardGroup::class, 'card_cardgroup');

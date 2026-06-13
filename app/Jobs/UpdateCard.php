@@ -46,12 +46,16 @@ class UpdateCard implements ShouldQueue
             }
 
             $regionCard = $card->regionCards()->where('region_id', 1)->first();
+            $roi = ($regionCard && $regionCard->psa_10_price > 0)
+                ? (float) $regionCard->calcRoi($card->converted_price)
+                : null;
 
-            // freeze updating on cheap cards, low roi cards, very expensive cards, or cards with no ebay data
+            // freeze updating on cheap cards, genuinely low-roi cards, or very expensive cards
+            // missing ebay data (roi null) should retry on the normal schedule, not get a 90-day hold
             if (
                 $card->cr_price < 700
-                || ($regionCard && $regionCard->calcRoi($card->converted_price) < 0.3)
                 || $card->cr_price > 27500
+                || ($roi !== null && $roi < 0.3)
             ) {
                 $card->last_checked = now();
                 $card->update_hold_until = now()->addDays(90);
@@ -70,6 +74,11 @@ class UpdateCard implements ShouldQueue
         } catch(\Exception $e) {
             \Log::error('Error updating card: ' . $card->search_term);
             \Log::error($e);
+
+            // Advance hold so a repeatedly failing card does not block the daily batch
+            $card->last_checked = now();
+            $card->update_hold_until = now()->addDays(1);
+            $card->save();
         }
     }
 }
