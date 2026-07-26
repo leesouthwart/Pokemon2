@@ -114,7 +114,12 @@ class ProcessPendingBids extends Command
             // Profitability check: Search for Buy It Now listings and verify profitability
             $card = $pendingBid->card;
             if ($card) {
-                $isProfitable = $this->checkProfitability($card, $pendingBid->bid_amount, $ebayService);
+                $isProfitable = $this->checkProfitability(
+                    $card,
+                    $pendingBid->bid_amount,
+                    $ebayService,
+                    $pendingBid->grading_type ?? 'psa'
+                );
                 
                 if (!$isProfitable) {
                     $this->warn("Skipping pending bid {$pendingBid->id}: Not profitable based on current Buy It Now prices");
@@ -184,12 +189,10 @@ class ProcessPendingBids extends Command
      * @param EbayService $ebayService The eBay service instance
      * @return bool True if profitable, false otherwise
      */
-    private function checkProfitability(Card $card, float $bidAmount, EbayService $ebayService): bool
+    private function checkProfitability(Card $card, float $bidAmount, EbayService $ebayService, string $gradingType = 'psa'): bool
     {
-        // Get all search terms: card search_term + all PSA titles
         $searchTerms = [$card->search_term];
-        
-        // Add all PSA titles linked to this card
+
         $card->load('psaTitles');
         foreach ($card->psaTitles as $psaTitle) {
             $searchTerms[] = $psaTitle->title;
@@ -197,9 +200,10 @@ class ProcessPendingBids extends Command
 
         $lowestPrice = null;
 
-        // Search for each term and find the lowest price
         foreach ($searchTerms as $searchTerm) {
-            $listings = $ebayService->searchPsa10BuyItNow($searchTerm);
+            $listings = $gradingType === 'cgc'
+                ? $ebayService->searchCgc10BuyItNow($searchTerm)
+                : $ebayService->searchPsa10BuyItNow($searchTerm);
             
             if (!empty($listings)) {
                 // Listings are already sorted by price ascending

@@ -143,6 +143,31 @@
                 </span>
             </div>
 
+            <div class="group relative bg-gray-700 p-6 border-l-gray-600 border-l-2 sm:border-t-2 sm:border-t-gray-600">
+                <div>
+                  <span class="inline-flex rounded-lg bg-orange-50 p-3 text-orange-700 ring-4 ring-white">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+                    </svg>
+                  </span>
+                </div>
+                <div class="mt-8">
+                    <h3 class="text-base font-semibold leading-6 text-white">
+                        <a href="{{ route('cgc-japanese-auctions') }}" class="focus:outline-none">
+                            <span class="absolute inset-0" aria-hidden="true"></span>
+                            Japanese CGC Auctions
+                        </a>
+                    </h3>
+                    <p class="mt-2 text-sm text-gray-400">Browse and bid on Japanese CGC 10 auctions ending soon.</p>
+                </div>
+                <span class="pointer-events-none absolute right-6 top-6 text-gray-400 group-hover:text-gray-300" aria-hidden="true">
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
+                  </svg>
+                </span>
+            </div>
+
             <div class="group relative bg-gray-700 p-6 border-l-gray-600 border-l-2 sm:border-l-0 sm:border-t-2 sm:border-t-gray-600">
                 <div>
                   <span class="inline-flex rounded-lg bg-blue-50 p-3 text-blue-700 ring-4 ring-white">

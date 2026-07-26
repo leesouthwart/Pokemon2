@@ -11,6 +11,7 @@ class PendingBid extends Model
 
     protected $fillable = [
         'card_id',
+        'grading_type',
         'ebay_item_id',
         'ebay_title',
         'ebay_image_url',

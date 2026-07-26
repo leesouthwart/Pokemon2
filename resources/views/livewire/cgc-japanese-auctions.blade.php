@@ -1,15 +1,15 @@
 <div class="bg-gray-900 py-10">
     <div class="px-4 mb-6 flex flex-wrap items-center gap-4">
-        <h2 class="text-2xl font-bold text-white">PSA Japanese PSA 10 Auctions (Ending in 24 Hours)</h2>
+        <h2 class="text-2xl font-bold text-white">Japanese CGC 10 Auctions (Ending in 24 Hours)</h2>
         <div class="ml-auto flex items-center gap-3">
             <a 
-                href="{{ route('cgc-japanese-auctions') }}"
+                href="{{ route('psa-japanese-auctions') }}"
                 class="bg-orange-700 hover:bg-orange-800 text-white font-bold px-4 py-2 rounded transition"
             >
-                CGC Auctions
+                PSA Auctions
             </a>
             <a 
-                href="{{ route('psa-japanese-api-listings') }}"
+                href="{{ route('cgc-japanese-api-listings') }}"
                 class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-4 py-2 rounded transition"
             >
                 View API Listings
@@ -18,7 +18,7 @@
                 href="{{ route('cards.psa-title.index') }}"
                 class="bg-green-700 hover:bg-green-800 text-white font-bold px-4 py-2 rounded transition"
             >
-                Manage PSA Titles
+                Manage Listing Titles
             </a>
             <button 
                 wire:click="fetchListings" 
@@ -142,4 +142,3 @@
         </div>
     @endif
 </div>
-

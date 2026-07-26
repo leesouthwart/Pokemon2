@@ -259,58 +259,79 @@ class EbayService
      */
     public function getPsaJapanesePsa10Auctions()
     {
-        
-        // Find US region by marketplace ID
+        return $this->getJapaneseGradedAuctions(
+            [
+                'japanese "psa 10" "pokemon"',
+                'jpn "psa 10" "pokemon"',
+            ],
+            'psa',
+            ['psa']
+        );
+    }
+
+    /**
+     * Get Japanese CGC 10 Pokemon auctions ending in the next 24 hours.
+     */
+    public function getCgcJapaneseCgc10Auctions()
+    {
+        return $this->getJapaneseGradedAuctions(
+            [
+                'japanese "cgc 10" "pokemon"',
+                'jpn "cgc 10" "pokemon"',
+            ],
+            'cgc',
+            ['psa']
+        );
+    }
+
+    private function getJapaneseGradedAuctions(array $searchTerms, string $gradingType, ?array $sellers = null)
+    {
         $region = Region::where('ebay_marketplace_id', 'EBAY_US')->first();
-        
-        // Build URL with query parameters
-        // Note: eBay Browse API filter syntax uses comma-separated values
+
+        if (!$region) {
+            Log::error('US region not found for Japanese graded auction search', [
+                'grading_type' => $gradingType,
+            ]);
+            return [];
+        }
+
         $url = 'https://api.ebay.com/buy/browse/v1/item_summary/search';
-        
-        // Run two separate searches - one for "japanese" and one for "jpn"
-        // Then combine the results since eBay doesn't handle OR queries well
-        $searchTerms = [
-            'japanese "psa 10" "pokemon"',
-            'jpn "psa 10" "pokemon"',
-        ];
-        
         $allItemSummaries = [];
-        $seenItemIds = []; // Track item IDs to avoid duplicates
-        
+        $seenItemIds = [];
+
         foreach ($searchTerms as $searchTerm) {
-            // Build filter - try with seller filter first, but it might not work in all cases
             $filter = 'buyingOptions:{AUCTION}';
-            // Note: Seller filter might cause issues if seller doesn't exist or filter syntax is wrong
-            // Uncomment if you want to filter by seller: 
-            $filter .= ',sellers:{psa}';
-            
+
+            if (!empty($sellers)) {
+                $filter .= ',sellers:{' . implode('|', $sellers) . '}';
+            }
+
             $queryParams = http_build_query([
                 'q' => $searchTerm,
                 'limit' => 200,
                 'sort' => 'endingSoonest',
                 'filter' => $filter,
             ]);
-               
+
             $response = Http::withHeaders([
                 'X-EBAY-C-MARKETPLACE-ID' => $region->ebay_marketplace_id,
                 'X-EBAY-C-ENDUSERCTX' => $region->ebay_end_user_context,
                 'Authorization' => 'Bearer ' . $this->accessToken,
             ])->get($url . '?' . $queryParams);
 
-            // Check for HTTP errors
             if (!$response->successful()) {
-                Log::error('eBay API error in getPsaJapanesePsa10Auctions', [
+                Log::error('eBay API error in getJapaneseGradedAuctions', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                     'search_term' => $searchTerm,
+                    'grading_type' => $gradingType,
                     'url' => $url . '?' . $queryParams,
                 ]);
-                continue; // Skip this search term and try the next one
+                continue;
             }
 
             $data = $response->json();
-                      
-            // Collect item summaries, avoiding duplicates
+
             if (isset($data['itemSummaries'])) {
                 foreach ($data['itemSummaries'] as $item) {
                     $itemId = $item['itemId'] ?? null;
@@ -321,68 +342,86 @@ class EbayService
                 }
             }
         }
-        
-        // Now process the combined item summaries
+
         $listings = [];
 
-        if (!empty($allItemSummaries)) {
-            $now = now();
-            $twentyFourHoursFromNow = $now->copy()->addHours(24);
+        if (empty($allItemSummaries)) {
+            return $listings;
+        }
 
-            foreach ($allItemSummaries as $item) {
-                // Check if it's an auction
-                if (!isset($item['buyingOptions']) || !in_array('AUCTION', $item['buyingOptions'])) {
-                    continue;
-                }
+        $now = now();
+        $twentyFourHoursFromNow = $now->copy()->addHours(24);
 
-                // // Check if title contains either 'japanese' or 'jpn', and also 'psa 10' and 'pokemon' (case insensitive)
-                $title = strtolower($item['title'] ?? '');
-                $hasJapanese = strpos($title, 'japanese') !== false || strpos($title, 'jpn') !== false;
-                if (!$hasJapanese || strpos($title, 'psa 10') === false || strpos($title, 'pokemon') === false) {
-                    continue;
-                }
-
-                // Check if ending within 24 hours
-                if (isset($item['itemEndDate'])) {
-                    $endDate = Carbon::parse($item['itemEndDate']);
-                    if ($endDate->isAfter($twentyFourHoursFromNow)) {
-                        continue; // Skip if ending after 24 hours
-                    }
-                } else {
-                    continue; // Skip if no end date
-                }
-
-                // Get current bid price or starting price if no bids yet
-                $currentBid = 0;
-                $currency = 'USD';
-                
-                // Check for current bid price first
-                if (isset($item['currentBidPrice']['value'])) {
-                    $currentBid = $item['currentBidPrice']['value'];
-                    $currency = $item['currentBidPrice']['currency'] ?? 'USD';
-                } elseif (isset($item['price']['value'])) {
-                    // Fall back to price field (which may be starting price if no bids)
-                    $currentBid = $item['price']['value'];
-                    $currency = $item['price']['currency'] ?? 'USD';
-                } elseif (isset($item['startingPrice']['value'])) {
-                    // Fall back to starting price
-                    $currentBid = $item['startingPrice']['value'];
-                    $currency = $item['startingPrice']['currency'] ?? 'USD';
-                }
-
-                $listings[] = [
-                    'itemId' => $item['itemId'] ?? '',
-                    'title' => $item['title'] ?? '',
-                    'image' => $item['image']['imageUrl'] ?? '',
-                    'currentBid' => $currentBid,
-                    'currency' => $currency,
-                    'url' => $item['itemWebUrl'] ?? '',
-                    'endDate' => $item['itemEndDate'] ?? '',
-                ];
+        foreach ($allItemSummaries as $item) {
+            if (!isset($item['buyingOptions']) || !in_array('AUCTION', $item['buyingOptions'])) {
+                continue;
             }
+
+            $title = strtolower($item['title'] ?? '');
+            $hasJapanese = strpos($title, 'japanese') !== false || strpos($title, 'jpn') !== false;
+
+            if (!$hasJapanese || strpos($title, 'pokemon') === false) {
+                continue;
+            }
+
+            if (!$this->titleMatchesGradedGrade($title, $gradingType)) {
+                continue;
+            }
+
+            if (isset($item['itemEndDate'])) {
+                $endDate = Carbon::parse($item['itemEndDate']);
+                if ($endDate->isAfter($twentyFourHoursFromNow)) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+
+            $currentBid = 0;
+            $currency = 'USD';
+
+            if (isset($item['currentBidPrice']['value'])) {
+                $currentBid = $item['currentBidPrice']['value'];
+                $currency = $item['currentBidPrice']['currency'] ?? 'USD';
+            } elseif (isset($item['price']['value'])) {
+                $currentBid = $item['price']['value'];
+                $currency = $item['price']['currency'] ?? 'USD';
+            } elseif (isset($item['startingPrice']['value'])) {
+                $currentBid = $item['startingPrice']['value'];
+                $currency = $item['startingPrice']['currency'] ?? 'USD';
+            }
+
+            $listings[] = [
+                'itemId' => $item['itemId'] ?? '',
+                'title' => $item['title'] ?? '',
+                'image' => $item['image']['imageUrl'] ?? '',
+                'currentBid' => $currentBid,
+                'currency' => $currency,
+                'url' => $item['itemWebUrl'] ?? '',
+                'endDate' => $item['itemEndDate'] ?? '',
+            ];
         }
 
         return $listings;
+    }
+
+    private function titleMatchesGradedGrade(string $title, string $gradingType): bool
+    {
+        if ($gradingType === 'cgc') {
+            preg_match_all('/cgc(?:\s|-)?([0-9]{1,2})\b/i', $title, $matches);
+            if (!empty($matches[1])) {
+                return in_array(10, array_map('intval', $matches[1]), true);
+            }
+
+            return (bool) preg_match('/\bcgc\b.*\b10\b/i', $title);
+        }
+
+        preg_match_all('/psa(?:\s|-)?([0-9]{1,2})\b/i', $title, $matches);
+        if (!empty($matches[1])) {
+            return in_array(10, array_map('intval', $matches[1]), true);
+        }
+
+        return (bool) preg_match('/\bpsa\b.*\b10\b/i', $title);
     }
 
     /**
@@ -492,6 +531,93 @@ class EbayService
 
         // Sort by price ascending to get lowest first
         usort($listings, function($a, $b) {
+            return $a['price'] <=> $b['price'];
+        });
+
+        return $listings;
+    }
+
+    /**
+     * Search for Buy It Now listings with CGC 10 in title.
+     */
+    public function searchCgc10BuyItNow($searchTerm)
+    {
+        $region = Region::where('ebay_marketplace_id', 'EBAY_US')->first();
+
+        if (!$region) {
+            Log::error('US region not found for CGC 10 Buy It Now search');
+            return [];
+        }
+
+        $url = 'https://api.ebay.com/buy/browse/v1/item_summary/search';
+        $filter = 'buyingOptions:{FIXED_PRICE}';
+        $filter .= ',sellers:{psa}';
+
+        $queryParams = http_build_query([
+            'q' => $searchTerm . ' "CGC 10"',
+            'limit' => 50,
+            'sort' => 'price',
+            'filter' => $filter,
+        ]);
+
+        $response = Http::withHeaders([
+            'X-EBAY-C-MARKETPLACE-ID' => $region->ebay_marketplace_id,
+            'X-EBAY-C-ENDUSERCTX' => $region->ebay_end_user_context,
+            'Authorization' => 'Bearer ' . $this->accessToken,
+        ])->get($url . '?' . $queryParams);
+
+        if (!$response->successful()) {
+            Log::error('eBay API error in searchCgc10BuyItNow', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'search_term' => $searchTerm,
+                'url' => $url . '?' . $queryParams,
+            ]);
+            return [];
+        }
+
+        $data = $response->json();
+        $listings = [];
+
+        if (isset($data['itemSummaries'])) {
+            foreach ($data['itemSummaries'] as $item) {
+                if (!isset($item['buyingOptions']) || !in_array('FIXED_PRICE', $item['buyingOptions'])) {
+                    continue;
+                }
+
+                $title = strtolower($item['title'] ?? '');
+
+                if (!$this->titleMatchesGradedGrade($title, 'cgc')) {
+                    continue;
+                }
+
+                $price = 0;
+                $currency = 'USD';
+
+                if (isset($item['price']['value'])) {
+                    $price = $item['price']['value'];
+                    $currency = $item['price']['currency'] ?? 'USD';
+                }
+
+                if (isset($item['shippingOptions'][0]['shippingCost']['value'])) {
+                    $price += $item['shippingOptions'][0]['shippingCost']['value'];
+                }
+
+                if ((float) $price <= 0) {
+                    continue;
+                }
+
+                $listings[] = [
+                    'itemId' => $item['itemId'] ?? '',
+                    'title' => $item['title'] ?? '',
+                    'price' => $price,
+                    'currency' => $currency,
+                    'url' => $item['itemWebUrl'] ?? '',
+                ];
+            }
+        }
+
+        usort($listings, function ($a, $b) {
             return $a['price'] <=> $b['price'];
         });
 
