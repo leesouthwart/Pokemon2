@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\Card;
 use App\Models\PendingBid;
 use App\Services\EbayService;
+use App\Services\SnipingBidCalculator;
 use Carbon\Carbon;
 
 class CreatePendingBids extends Command
@@ -92,7 +93,7 @@ class CreatePendingBids extends Command
                 continue;
             }
 
-            $bidAmount = $this->calculateBidAmount($card, $ebayService, $gradingType);
+            $bidAmount = SnipingBidCalculator::calculate($card, $ebayService, $gradingType);
 
             if ($bidAmount <= 0) {
                 $this->warn("Card {$card->id} has invalid bid price, skipping");
@@ -125,82 +126,5 @@ class CreatePendingBids extends Command
         $this->info("Updated {$pendingBidsUpdated} existing pending bids");
 
         return Command::SUCCESS;
-    }
-
-    private function calculateBidAmount(Card $card, EbayService $ebayService, string $gradingType): float
-    {
-        $fallbackBidAmount = (float) $card->getBidPrice();
-
-        $searchTerms = [$card->search_term];
-        $card->load('psaTitles');
-        foreach ($card->psaTitles as $psaTitle) {
-            $searchTerms[] = $psaTitle->title;
-        }
-        $searchTerms = array_values(array_unique(array_filter($searchTerms)));
-
-        $byItemId = [];
-        foreach ($searchTerms as $searchTerm) {
-            $listings = $gradingType === 'cgc'
-                ? $ebayService->searchCgc10BuyItNow($searchTerm)
-                : $ebayService->searchPsa10BuyItNow($searchTerm);
-
-            foreach ($listings as $row) {
-                $itemId = $row['itemId'] ?? '';
-                if ($itemId === '') {
-                    continue;
-                }
-                $price = (float) ($row['price'] ?? 0);
-                if ($price <= 0) {
-                    continue;
-                }
-                if (!isset($byItemId[$itemId]) || $price < $byItemId[$itemId]) {
-                    $byItemId[$itemId] = $price;
-                }
-            }
-        }
-
-        $uniqueListingCount = count($byItemId);
-        $lowestPrice = null;
-        foreach ($byItemId as $price) {
-            if ($lowestPrice === null || $price < $lowestPrice) {
-                $lowestPrice = $price;
-            }
-        }
-
-        $gradeLabel = strtoupper($gradingType) . ' 10';
-
-        if ($uniqueListingCount >= 3 && $lowestPrice !== null && $lowestPrice > 0) {
-            $listingBasedBid = $this->calculateBidFromTargetProfit($lowestPrice, 0.15);
-            if ($listingBasedBid > 0) {
-                $this->info("Card {$card->id} using listing-based bid {$listingBasedBid} (lowest {$gradeLabel} listing: \${$lowestPrice}, unique listings: {$uniqueListingCount})");
-                return $listingBasedBid;
-            }
-        }
-
-        $this->info("Card {$card->id} using fallback buy+grade bid {$fallbackBidAmount} (unique {$gradeLabel} listings: {$uniqueListingCount})");
-        return $fallbackBidAmount;
-    }
-
-    private function calculateBidFromTargetProfit(float $expectedSalePrice, float $targetProfitMargin): float
-    {
-        $netAfterFees = $this->calculateNetSaleAfterFees($expectedSalePrice);
-        if ($netAfterFees <= 0) {
-            return 0;
-        }
-
-        $maxBid = $netAfterFees / (1 + $targetProfitMargin);
-
-        return (float) floor($maxBid);
-    }
-
-    private function calculateNetSaleAfterFees(float $salePrice): float
-    {
-        $net = $salePrice * 0.87;
-
-        if ($salePrice < 100) {
-            $net -= 3;
-        }
-
-        return $net;
     }
 }

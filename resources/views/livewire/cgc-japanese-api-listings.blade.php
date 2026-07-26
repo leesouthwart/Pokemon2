@@ -95,10 +95,7 @@
             </thead>
             <tbody class="divide-y divide-white/5">
                 @foreach($listings as $listing)
-                    <tr 
-                        class="hover:bg-gray-800 {{ !($listing['hasMatchingCard'] ?? false) ? 'cursor-pointer' : '' }}" 
-                        @if(!($listing['hasMatchingCard'] ?? false)) wire:click="openModal('{{ $listing['itemId'] }}')" @endif
-                    >
+                    <tr class="hover:bg-gray-800">
                         <td class="py-2 px-2">
                             <div class="flex items-center">
                                 <img src="{{ $listing['image'] }}" alt="{{ $listing['title'] }}" class="aspect-[4/5] h-24 object-contain">
@@ -128,7 +125,7 @@
                         <td class="py-2 px-2">
                             <div class="flex flex-col gap-1 text-xs">
                                 @if($listing['hasPendingBid'] ?? false)
-                                    <span class="px-2 py-1 bg-green-600 text-white rounded">Has Pending Bid</span>
+                                    <span class="px-2 py-1 bg-green-600 text-white rounded">Pending Bid @if($listing['bidAmount']) (${{ number_format($listing['bidAmount'], 0) }}) @endif</span>
                                 @else
                                     <span class="px-2 py-1 bg-gray-600 text-white rounded">No Pending Bid</span>
                                 @endif
@@ -181,203 +178,6 @@
                     </div>
                 </div>
             @endif
-        </div>
-    @endif
-
-    <!-- Modal -->
-    @if($showModal && $selectedListing)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click="closeModal">
-            <div class="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" wire:click.stop>
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-white">Link Card to Listing</h3>
-                        <button wire:click="closeModal" class="text-gray-400 hover:text-white">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    
-                    <div class="mb-4 p-3 bg-gray-700 rounded">
-                        <p class="text-sm text-gray-300 mb-1"><strong>Listing Title:</strong></p>
-                        <p class="text-white">{{ $selectedListing['title'] }}</p>
-                    </div>
-
-                    @if($modalMessage)
-                        <div class="mb-4 p-3 rounded {{ $modalMessageType === 'success' ? 'bg-green-600' : 'bg-red-600' }} text-white">
-                            {{ $modalMessage }}
-                        </div>
-                    @endif
-
-                    <!-- Tabs -->
-                    <div class="flex border-b border-gray-700 mb-4">
-                        <button 
-                            wire:click="$set('activeTab', 'create')"
-                            class="px-4 py-2 text-sm font-medium {{ $activeTab === 'create' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400 hover:text-white' }}"
-                        >
-                            Create New Card
-                        </button>
-                        <button 
-                            wire:click="$set('activeTab', 'search')"
-                            class="px-4 py-2 text-sm font-medium {{ $activeTab === 'search' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400 hover:text-white' }}"
-                        >
-                            Search Existing Cards
-                        </button>
-                    </div>
-
-                    <!-- Tab 1: Create New Card -->
-                    @if($activeTab === 'create')
-                        <form wire:submit.prevent="createNewCard" class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">
-                                    Search Term
-                                </label>
-                                <input
-                                    type="text"
-                                    wire:model="newCardSearchTerm"
-                                    class="w-full rounded bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20"
-                                    placeholder="Enter card search term"
-                                    required
-                                >
-                                @error('newCardSearchTerm')
-                                    <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">
-                                    URL
-                                </label>
-                                <input
-                                    type="url"
-                                    wire:model="newCardUrl"
-                                    class="w-full rounded bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20"
-                                    placeholder="Enter card URL"
-                                    required
-                                >
-                                @error('newCardUrl')
-                                    <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    wire:click="closeModal"
-                                    class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    class="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                                    @if($creatingCard) disabled @endif
-                                >
-                                    @if($creatingCard)
-                                        Creating...
-                                    @else
-                                        Create Card
-                                    @endif
-                                </button>
-                            </div>
-                        </form>
-                    @endif
-
-                    <!-- Tab 2: Search Existing Cards -->
-                    @if($activeTab === 'search')
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-2">
-                                    Search Cards
-                                </label>
-                                <input
-                                    type="text"
-                                    wire:model.live.debounce.300ms="cardSearchQuery"
-                                    class="w-full rounded bg-gray-700 border border-gray-600 text-white px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20"
-                                    placeholder="Type to search by search term or listing title..."
-                                >
-                            </div>
-                            
-                            @if($selectedCardId && !empty($selectedCardPsaTitles))
-                                <div class="p-3 bg-gray-700 rounded">
-                                    <p class="text-sm text-gray-300 mb-2"><strong>Existing Listing Titles for Selected Card:</strong></p>
-                                    <div class="flex flex-wrap gap-2">
-                                        @foreach($selectedCardPsaTitles as $title)
-                                            <span class="px-2 py-1 bg-gray-600 text-gray-300 text-sm rounded">{{ $title }}</span>
-                                        @endforeach
-                                    </div>
-                                    <p class="text-xs text-gray-400 mt-2">The listing title will be added as a new sniping title if it doesn't already exist.</p>
-                                </div>
-                            @endif
-
-                            @if(strlen($cardSearchQuery) >= 2)
-                                @if(count($searchResults) > 0)
-                                    <div class="max-h-96 overflow-y-auto space-y-2">
-                                        @foreach($searchResults as $result)
-                                            <div 
-                                                wire:click="selectCard({{ $result['id'] }})"
-                                                class="p-3 rounded border-2 cursor-pointer transition {{ $selectedCardId == $result['id'] ? 'border-indigo-500 bg-indigo-900/20' : 'border-gray-600 bg-gray-700 hover:border-gray-500' }}"
-                                            >
-                                                <div class="flex items-center gap-3">
-                                                    @if($result['image_url'])
-                                                        <img src="{{ $result['image_url'] }}" alt="{{ $result['search_term'] }}" class="h-16 w-16 object-contain">
-                                                    @else
-                                                        <div class="h-16 w-16 bg-gray-600 flex items-center justify-center text-xs text-gray-400">No Image</div>
-                                                    @endif
-                                                    <div class="flex-1">
-                                                        <p class="text-white font-medium">{{ $result['search_term'] }}</p>
-                                                        @if(!empty($result['psa_titles']))
-                                                            <div class="mt-1">
-                                                                <p class="text-xs text-gray-500 mb-1">Listing Titles ({{ count($result['psa_titles']) }}):</p>
-                                                                <div class="flex flex-wrap gap-1">
-                                                                    @foreach($result['psa_titles'] as $title)
-                                                                        <span class="px-2 py-0.5 bg-gray-600 text-gray-300 text-xs rounded">{{ $title }}</span>
-                                                                    @endforeach
-                                                                </div>
-                                                            </div>
-                                                        @elseif($result['psa_title'])
-                                                            <p class="text-sm text-gray-400">Listing Title: {{ $result['psa_title'] }}</p>
-                                                        @endif
-                                                    </div>
-                                                    @if($selectedCardId == $result['id'])
-                                                        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <div class="text-center py-8 text-gray-400">
-                                        No cards found matching "{{ $cardSearchQuery }}"
-                                    </div>
-                                @endif
-                            @else
-                                <div class="text-center py-8 text-gray-400">
-                                    Type at least 2 characters to search
-                                </div>
-                            @endif
-
-                            <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
-                                <button
-                                    wire:click="closeModal"
-                                    class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    wire:click="linkExistingCard"
-                                    @if(!$selectedCardId) disabled @endif
-                                    class="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Confirm Link
-                                </button>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
         </div>
     @endif
 </div>

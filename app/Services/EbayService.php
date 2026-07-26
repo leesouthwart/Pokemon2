@@ -276,15 +276,16 @@ class EbayService
     {
         return $this->getJapaneseGradedAuctions(
             [
-                'japanese "cgc 10" "pokemon"',
+                '"cgc 10" "pokemon"',
                 'jpn "cgc 10" "pokemon"',
             ],
             'cgc',
-            ['psa']
+            ['psa'],
+            false
         );
     }
 
-    private function getJapaneseGradedAuctions(array $searchTerms, string $gradingType, ?array $sellers = null)
+    private function getJapaneseGradedAuctions(array $searchTerms, string $gradingType, ?array $sellers = null, bool $requireJapanese = true)
     {
         $region = Region::where('ebay_marketplace_id', 'EBAY_US')->first();
 
@@ -358,9 +359,13 @@ class EbayService
             }
 
             $title = strtolower($item['title'] ?? '');
-            $hasJapanese = strpos($title, 'japanese') !== false || strpos($title, 'jpn') !== false;
 
-            if (!$hasJapanese || strpos($title, 'pokemon') === false) {
+            if ($requireJapanese) {
+                $hasJapanese = strpos($title, 'japanese') !== false || strpos($title, 'jpn') !== false;
+                if (!$hasJapanese || strpos($title, 'pokemon') === false) {
+                    continue;
+                }
+            } elseif (strpos($title, 'pokemon') === false) {
                 continue;
             }
 

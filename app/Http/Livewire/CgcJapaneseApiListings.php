@@ -6,11 +6,12 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Services\EbayService;
 use App\Services\GixenService;
+use App\Services\SnipingBidCalculator;
 use App\Models\PendingBid;
 use App\Models\Card;
-use App\Jobs\CreateCard;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class CgcJapaneseApiListings extends Component
 {
@@ -24,21 +25,6 @@ class CgcJapaneseApiListings extends Component
 
     public $cardFilter = 'both';
     public $pendingBidFilter = 'both';
-
-    public $showModal = false;
-    public $selectedListing = null;
-    public $activeTab = 'create';
-    public $modalMessage = null;
-    public $modalMessageType = null;
-    public $creatingCard = false;
-
-    public $newCardSearchTerm = '';
-    public $newCardUrl = '';
-
-    public $cardSearchQuery = '';
-    public $searchResults = [];
-    public $selectedCardId = null;
-    public $selectedCardPsaTitles = [];
 
     public function mount()
     {
@@ -59,169 +45,6 @@ class CgcJapaneseApiListings extends Component
         $this->resetPage();
     }
 
-    public function openModal($itemId)
-    {
-        $listing = collect($this->allListings)->firstWhere('itemId', $itemId);
-
-        if ($listing && !$listing['hasMatchingCard']) {
-            $this->selectedListing = $listing;
-            $this->showModal = true;
-            $this->activeTab = 'create';
-            $this->newCardSearchTerm = '';
-            $this->newCardUrl = '';
-            $this->cardSearchQuery = '';
-            $this->searchResults = [];
-            $this->selectedCardId = null;
-            $this->selectedCardPsaTitles = [];
-            $this->modalMessage = null;
-            $this->modalMessageType = null;
-            $this->creatingCard = false;
-        }
-    }
-
-    public function closeModal()
-    {
-        $this->showModal = false;
-        $this->selectedListing = null;
-        $this->activeTab = 'create';
-        $this->newCardSearchTerm = '';
-        $this->newCardUrl = '';
-        $this->cardSearchQuery = '';
-        $this->searchResults = [];
-        $this->selectedCardId = null;
-        $this->selectedCardPsaTitles = [];
-        $this->modalMessage = null;
-        $this->modalMessageType = null;
-        $this->creatingCard = false;
-    }
-
-    public function updatedCardSearchQuery()
-    {
-        if (strlen($this->cardSearchQuery) >= 2) {
-            $this->searchCards();
-        } else {
-            $this->searchResults = [];
-        }
-    }
-
-    public function searchCards()
-    {
-        $query = $this->cardSearchQuery;
-
-        if (strlen($query) < 2) {
-            $this->searchResults = [];
-            return;
-        }
-
-        $this->searchResults = Card::where(function ($q) use ($query) {
-            $q->where('search_term', 'like', "%{$query}%")
-                ->orWhere('psa_title', 'like', "%{$query}%")
-                ->orWhereHas('psaTitles', function ($q2) use ($query) {
-                    $q2->where('title', 'like', "%{$query}%");
-                });
-        })
-            ->with('psaTitles')
-            ->orderBy('id', 'desc')
-            ->limit(20)
-            ->get()
-            ->map(function ($card) {
-                return [
-                    'id' => $card->id,
-                    'search_term' => $card->search_term,
-                    'image_url' => $card->image_url,
-                    'psa_title' => $card->psa_title,
-                    'psa_titles' => $card->psaTitles->pluck('title')->toArray(),
-                ];
-            })
-            ->toArray();
-    }
-
-    public function selectCard($cardId)
-    {
-        $this->selectedCardId = $cardId;
-        $card = Card::with('psaTitles')->find($cardId);
-        if ($card) {
-            $this->selectedCardPsaTitles = $card->psaTitles->pluck('title')->toArray();
-        } else {
-            $this->selectedCardPsaTitles = [];
-        }
-    }
-
-    public function createNewCard()
-    {
-        $this->validate([
-            'newCardSearchTerm' => 'required|string|max:255',
-            'newCardUrl' => 'required|url',
-        ]);
-
-        if (!$this->selectedListing) {
-            $this->modalMessage = 'No listing selected.';
-            $this->modalMessageType = 'error';
-            return;
-        }
-
-        $this->creatingCard = true;
-
-        try {
-            CreateCard::dispatch(
-                $this->newCardSearchTerm,
-                $this->newCardUrl,
-                '',
-                $this->selectedListing['title']
-            );
-
-            $this->modalMessage = 'Card creation job has been dispatched. The card will be linked once the job completes.';
-            $this->modalMessageType = 'success';
-            $this->creatingCard = false;
-
-            $this->fetchListings();
-            $this->dispatch('card-created');
-            $this->closeModal();
-        } catch (\Exception $e) {
-            $this->modalMessage = 'Error creating card: ' . $e->getMessage();
-            $this->modalMessageType = 'error';
-            $this->creatingCard = false;
-        }
-    }
-
-    public function linkExistingCard()
-    {
-        if (!$this->selectedCardId || !$this->selectedListing) {
-            $this->modalMessage = 'Please select a card to link.';
-            $this->modalMessageType = 'error';
-            return;
-        }
-
-        $card = Card::find($this->selectedCardId);
-
-        if ($card) {
-            try {
-                $existingTitle = $card->psaTitles()->where('title', $this->selectedListing['title'])->first();
-
-                if (!$existingTitle) {
-                    $card->psaTitles()->create([
-                        'title' => $this->selectedListing['title'],
-                    ]);
-
-                    $this->modalMessage = 'Listing title successfully added to card!';
-                } else {
-                    $this->modalMessage = 'This listing title already exists for this card.';
-                }
-
-                $this->modalMessageType = 'success';
-                $this->fetchListings();
-                $this->dispatch('card-linked');
-                $this->closeModal();
-            } catch (\Exception $e) {
-                $this->modalMessage = 'Error linking card: ' . $e->getMessage();
-                $this->modalMessageType = 'error';
-            }
-        } else {
-            $this->modalMessage = 'Card not found.';
-            $this->modalMessageType = 'error';
-        }
-    }
-
     public function fetchListings()
     {
         $this->loading = true;
@@ -231,17 +54,42 @@ class CgcJapaneseApiListings extends Component
             $ebayService = new EbayService();
             $apiListings = $ebayService->getCgcJapaneseCgc10Auctions();
 
-            if (empty($apiListings)) {
-                \Log::info('getCgcJapaneseCgc10Auctions returned empty array', [
-                    'environment' => app()->environment(),
-                ]);
-            }
+            $pendingBids = PendingBid::where('grading_type', 'cgc')
+                ->where('bid_submitted', false)
+                ->get()
+                ->keyBy('ebay_item_id');
 
-            $pendingBidItemIds = PendingBid::where('grading_type', 'cgc')->pluck('ebay_item_id')->toArray();
-
-            $this->allListings = collect($apiListings)->map(function ($listing) use ($pendingBidItemIds) {
-                $hasPendingBid = in_array($listing['itemId'], $pendingBidItemIds);
+            $this->allListings = collect($apiListings)->map(function ($listing) use ($pendingBids, $ebayService) {
                 $matchingCard = Card::findByPsaTitle($listing['title']);
+                $pendingBid = $pendingBids->get($listing['itemId']) ?? null;
+
+                if ($pendingBid) {
+                    $pendingBid->update([
+                        'ebay_title' => $listing['title'],
+                        'ebay_image_url' => $listing['image'] ?? null,
+                        'ebay_url' => $listing['url'] ?? '',
+                        'current_bid' => $listing['currentBid'] ?? 0,
+                        'end_date' => isset($listing['endDate']) ? Carbon::parse($listing['endDate']) : null,
+                    ]);
+                } elseif ($matchingCard) {
+                    $bidAmount = SnipingBidCalculator::calculate($matchingCard, $ebayService, 'cgc');
+
+                    if ($bidAmount > 0 && $bidAmount > ($listing['currentBid'] ?? 0)) {
+                        $pendingBid = PendingBid::create([
+                            'card_id' => $matchingCard->id,
+                            'grading_type' => 'cgc',
+                            'ebay_item_id' => $listing['itemId'],
+                            'ebay_title' => $listing['title'],
+                            'ebay_image_url' => $listing['image'] ?? null,
+                            'ebay_url' => $listing['url'] ?? '',
+                            'current_bid' => $listing['currentBid'] ?? 0,
+                            'bid_amount' => $bidAmount,
+                            'currency' => $listing['currency'] ?? 'USD',
+                            'end_date' => isset($listing['endDate']) ? Carbon::parse($listing['endDate']) : null,
+                            'bid_submitted' => false,
+                        ]);
+                    }
+                }
 
                 return [
                     'itemId' => $listing['itemId'],
@@ -251,9 +99,9 @@ class CgcJapaneseApiListings extends Component
                     'currency' => $listing['currency'] ?? 'USD',
                     'url' => $listing['url'] ?? '',
                     'endDate' => $listing['endDate'] ?? null,
-                    'bidAmount' => null,
-                    'pendingBidId' => null,
-                    'hasPendingBid' => $hasPendingBid,
+                    'bidAmount' => $pendingBid ? (float) $pendingBid->bid_amount : null,
+                    'pendingBidId' => $pendingBid?->id,
+                    'hasPendingBid' => $pendingBid !== null,
                     'hasMatchingCard' => $matchingCard !== null,
                     'matchingCardId' => $matchingCard ? $matchingCard->id : null,
                 ];
@@ -320,16 +168,30 @@ class CgcJapaneseApiListings extends Component
             $result = $gixenService->submitBid($itemId, $bidAmount);
 
             if ($result['success']) {
-                $listing = collect($this->allListings)->firstWhere('itemId', $itemId);
-                if (isset($listing['pendingBidId'])) {
-                    $pendingBid = PendingBid::find($listing['pendingBidId']);
-                    if ($pendingBid) {
-                        $pendingBid->update([
-                            'bid_submitted' => true,
-                            'bid_submitted_at' => now(),
-                        ]);
-                    }
+                if (!empty($listing['pendingBidId'])) {
+                    PendingBid::find($listing['pendingBidId'])?->update([
+                        'bid_amount' => $bidAmount,
+                        'bid_submitted' => true,
+                        'bid_submitted_at' => now(),
+                    ]);
+                } else {
+                    PendingBid::create([
+                        'card_id' => $listing['matchingCardId'] ?? null,
+                        'grading_type' => 'cgc',
+                        'ebay_item_id' => $listing['itemId'],
+                        'ebay_title' => $listing['title'],
+                        'ebay_image_url' => $listing['image'] ?? null,
+                        'ebay_url' => $listing['url'] ?? '',
+                        'current_bid' => $listing['currentBid'] ?? 0,
+                        'bid_amount' => $bidAmount,
+                        'currency' => $listing['currency'] ?? 'USD',
+                        'end_date' => !empty($listing['endDate']) ? Carbon::parse($listing['endDate']) : null,
+                        'bid_submitted' => true,
+                        'bid_submitted_at' => now(),
+                    ]);
                 }
+
+                $this->fetchListings();
 
                 $this->bidStatus[$itemId] = [
                     'success' => true,
@@ -381,7 +243,10 @@ class CgcJapaneseApiListings extends Component
 
         foreach ($currentItems as $listing) {
             if (!isset($this->bidAmounts[$listing['itemId']])) {
-                $this->bidAmounts[$listing['itemId']] = $listing['bidAmount'] ?? round($listing['currentBid'] + 0.5, 2);
+                $this->bidAmounts[$listing['itemId']] = SnipingBidCalculator::defaultBidInput(
+                    $listing['bidAmount'] ?? null,
+                    $listing['currentBid']
+                );
             }
         }
 

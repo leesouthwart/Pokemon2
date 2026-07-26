@@ -5,6 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Services\GixenService;
+use App\Services\SnipingBidCalculator;
 use App\Models\PendingBid;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -162,7 +163,10 @@ class CgcJapaneseAuctions extends Component
 
         foreach ($currentItems as $listing) {
             if (!isset($this->bidAmounts[$listing['itemId']])) {
-                $this->bidAmounts[$listing['itemId']] = $listing['bidAmount'] ?? round($listing['currentBid'] + 0.5, 2);
+                $this->bidAmounts[$listing['itemId']] = SnipingBidCalculator::defaultBidInput(
+                    $listing['bidAmount'] ?? null,
+                    $listing['currentBid']
+                );
             }
         }
 
