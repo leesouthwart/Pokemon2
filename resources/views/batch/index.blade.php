@@ -1,70 +1,32 @@
 <x-app-layout>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold">Batches</h2>
-                        <a href="{{ route('batch.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            Create New Batch
-                        </a>
-                    </div>
+    <div class="dh-page">
+        <x-page-header eyebrow="Selling" title="Batches">
+            <a href="{{ route('batch.create') }}" class="dh-btn-primary"><i class="fas fa-plus"></i> New batch</a>
+        </x-page-header>
 
-                    @if($batches->count() > 0)
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full bg-white border border-gray-300">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                                            ID
-                                        </th>
-                                        <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                                            Name
-                                        </th>
-                                        <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                                            Listings Count
-                                        </th>
-                                        <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                                            Created At
-                                        </th>
-                                        <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white">
-                                    @foreach($batches as $batch)
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                                <div class="text-sm leading-5 text-gray-900">{{ $batch->id }}</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                                <div class="text-sm leading-5 text-gray-900">{{ $batch->name }}</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                                <div class="text-sm leading-5 text-gray-900">{{ $batch->ebayListings->count() }}</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                                <div class="text-sm leading-5 text-gray-900">{{ $batch->created_at->format('M d, Y H:i') }}</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-sm font-medium">
-                                                <a href="{{ route('batch.view', $batch) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+        @if($batches->count() > 0)
+            <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                @foreach($batches as $batch)
+                    <a href="{{ route('batch.view', $batch) }}" class="dh-tile group block p-5">
+                        <div class="flex items-center justify-between">
+                            <span class="dh-badge dh-badge-violet">#{{ $batch->id }}</span>
+                            <i class="fas fa-arrow-right text-xs text-violet-200/30 transition group-hover:translate-x-0.5 group-hover:text-yellow-400"></i>
                         </div>
-                    @else
-                        <div class="text-center py-8">
-                            <p class="text-gray-500 text-lg">No batches found.</p>
-                            <a href="{{ route('batch.create') }}" class="mt-4 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                                Create Your First Batch
-                            </a>
+                        <div class="mt-4 truncate text-lg font-semibold text-white">{{ $batch->name ?: 'Batch ' . $batch->id }}</div>
+                        <div class="text-xs dh-muted">{{ $batch->created_at->format('j M Y, H:i') }}</div>
+                        <div class="mt-4 dh-stat text-xs">
+                            <div class="dh-stat-label">Listings</div>
+                            <div class="dh-stat-value">{{ $batch->ebayListings->count() }}</div>
                         </div>
-                    @endif
-                </div>
+                    </a>
+                @endforeach
             </div>
-        </div>
+        @else
+            <div class="dh-panel mt-8 py-16 text-center">
+                <i class="fas fa-boxes-stacked text-3xl text-violet-200/30"></i>
+                <p class="mt-3 dh-muted">No batches yet.</p>
+                <a href="{{ route('batch.create') }}" class="dh-btn-primary mt-5">Create your first batch</a>
+            </div>
+        @endif
     </div>
-</x-app-layout> 
+</x-app-layout>

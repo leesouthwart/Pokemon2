@@ -1,80 +1,42 @@
 <x-app-layout>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <div class="mb-6">
-                        <h2 class="text-2xl font-bold mb-2">Edit Card PSA Title</h2>
-                        <p class="text-gray-600 dark:text-gray-400">Card ID: {{ $card->id }} | Search Term: {{ $card->search_term }}</p>
-                    </div>
+    <div class="dh-page max-w-3xl">
+        <x-page-header eyebrow="Edit listing title" :title="$card->search_term">
+            <a href="{{ route('cards.psa-title.index') }}" class="dh-btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+        </x-page-header>
+        <p class="mt-2 text-sm dh-muted">Card #{{ $card->id }}</p>
 
-                    @if($errors->any())
-                        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                            <ul>
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('cards.psa-title.update', $card) }}">
-                        @csrf
-                        @method('PUT')
-
-                        <div class="mb-4">
-                            <label for="psa_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                PSA Title
-                            </label>
-                            <input
-                                type="text"
-                                id="psa_title"
-                                name="psa_title"
-                                value="{{ old('psa_title', $card->psa_title) }}"
-                                placeholder="Enter PSA title to match eBay listings..."
-                                class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                            >
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                This title will be used to match eBay listing titles to this card.
-                            </p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    name="excluded_from_sniping"
-                                    value="1"
-                                    {{ old('excluded_from_sniping', $card->excluded_from_sniping) ? 'checked' : '' }}
-                                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                >
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                                    Exclude from sniping
-                                </span>
-                            </label>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                Excluded cards will be filtered out from sniping.
-                            </p>
-                        </div>
-
-                        <div class="flex gap-2">
-                            <button
-                                type="submit"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                            >
-                                Update Card
-                            </button>
-                            <a
-                                href="{{ route('cards.psa-title.index') }}"
-                                class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                            >
-                                Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
+        @if($errors->any())
+            <div class="dh-alert-error mt-6">
+                <ul class="list-inside list-disc">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
-        </div>
+        @endif
+
+        <form method="POST" action="{{ route('cards.psa-title.update', $card) }}" class="dh-panel mt-6 space-y-5 p-6">
+            @csrf
+            @method('PUT')
+
+            <div>
+                <label for="psa_title" class="dh-label">PSA title</label>
+                <input type="text" id="psa_title" name="psa_title" value="{{ old('psa_title', $card->psa_title) }}" placeholder="Enter PSA title to match eBay listings…" class="dh-input">
+                <p class="dh-help">Used to match eBay listing titles to this card.</p>
+            </div>
+
+            <div>
+                <label class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="excluded_from_sniping" value="1" {{ old('excluded_from_sniping', $card->excluded_from_sniping) ? 'checked' : '' }} class="dh-check">
+                    Exclude from sniping
+                </label>
+                <p class="dh-help">Excluded cards are filtered out from sniping.</p>
+            </div>
+
+            <div class="flex gap-2 border-t border-white/10 pt-5">
+                <button type="submit" class="dh-btn-primary">Update card</button>
+                <a href="{{ route('cards.psa-title.index') }}" class="dh-btn-ghost">Cancel</a>
+            </div>
+        </form>
     </div>
 </x-app-layout>
-

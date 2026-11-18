@@ -7,7 +7,9 @@ use Livewire\Component;
 use App\Models\Card;
 use App\Models\CardGroup;
 use App\Models\Currency;
+use App\Models\Region;
 use Livewire\WithPagination;
+use Livewire\Attributes\Url;
 use Flasher\Notyf\Prime\NotyfInterface;
 
 use Illuminate\Support\Facades\DB;
@@ -30,6 +32,12 @@ class CardList extends Component
     public $cardGroup;
     public $mode = 'graded';
 
+    #[Url(as: 'view')]
+    public $display = 'grid';
+
+    #[Url(as: 'group')]
+    public $groupId = null;
+
     public function mount($mode = 'graded')
     {
         $this->mode = $mode;
@@ -37,6 +45,49 @@ class CardList extends Component
         if ($this->mode === 'raw') {
             $this->sortField = 'raw_roi_average';
         }
+    }
+
+    public function sortOptions(): array
+    {
+        $options = $this->mode === 'raw'
+            ? [
+                'raw_roi_average' => 'Raw ROI',
+                'roi_average' => 'Graded ROI',
+                'region_cards.raw_price' => 'Raw eBay price',
+            ]
+            : [
+                'roi_average' => 'ROI',
+                'region_cards.psa_10_price' => 'PSA 10 price',
+                'region_cards.average_psa_10_price' => 'PSA 10 average',
+            ];
+
+        return $options + [
+            'cr_price' => 'Buy price',
+            'search_term' => 'Name',
+            'cards.updated_at' => 'Last updated',
+        ];
+    }
+
+    public function setDisplay($display)
+    {
+        $this->display = $display === 'list' ? 'list' : 'grid';
+    }
+
+    public function setGroup($groupId = null)
+    {
+        $this->groupId = $groupId ?: null;
+        $this->resetPage();
+    }
+
+    public function toggleSortDirection()
+    {
+        $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+    }
+
+    public function clearSelection()
+    {
+        $this->selectedCards = [];
+        $this->dispatch('unselect');
     }
 
     protected $listeners = [
@@ -52,7 +103,16 @@ class CardList extends Component
         $cards = $cardsQuery
             ->with('regionCards')
             ->where('search_term', 'like', '%' . $this->search . '%')
-            ->join('region_cards', 'cards.id', '=', 'region_cards.card_id');
+            ->join('region_cards', function ($join) {
+                $join->on('cards.id', '=', 'region_cards.card_id')
+                    ->where('region_cards.region_id', Region::GB);
+            });
+
+        if ($this->groupId && !$this->cardGroup) {
+            $cards = $cards->whereHas('cardGroups', function ($query) {
+                $query->where('card_cardgroup.card_group_id', $this->groupId);
+            });
+        }
         
         // Get GBP currency and conversion rate from JPY to GBP
         $gbpCurrency = Currency::find(Currency::GBP);
@@ -116,8 +176,18 @@ class CardList extends Component
         $this->sortField = $field;
     }
 
+    public function updatedSortField()
+    {
+        $this->resetPage();
+    }
+
     public function handleSelectedCard($cardId)
     {
+        if (in_array($cardId, $this->selectedCards)) {
+            $this->selectedCards = array_values(array_diff($this->selectedCards, [$cardId]));
+            return;
+        }
+
         $this->selectedCards[] = $cardId;
     }
 

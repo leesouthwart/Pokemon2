@@ -17,7 +17,7 @@
         <button
             type="button"
             onclick="document.getElementById('add-balance-modal').classList.remove('hidden')"
-            class="inline-flex items-center px-4 py-2 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
+            class="dh-btn-primary"
         >
             {{ __('Add Balance') }}
         </button>
@@ -38,8 +38,8 @@
     </div>
 
     <!-- Add Balance Modal -->
-    <div id="add-balance-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+    <div id="add-balance-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto w-full max-w-md rounded-3xl border border-white/10 bg-ink-800 p-6 shadow-2xl shadow-black/60">
             <div class="mt-3">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
@@ -80,7 +80,7 @@
                         <select
                             id="type"
                             name="type"
-                            class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                            class="dh-select mt-1"
                             required
                         >
                             <option value="">{{ __('Select type...') }}</option>
@@ -103,7 +103,7 @@
                             id="notes"
                             name="notes"
                             rows="3"
-                            class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                            class="dh-textarea mt-1"
                             placeholder="{{ __('Add any notes about this transaction...') }}"
                         >{{ old('notes') }}</textarea>
                         <x-input-error class="mt-2" :messages="$errors->get('notes')" />
@@ -114,7 +114,7 @@
                         <button
                             type="button"
                             onclick="document.getElementById('add-balance-modal').classList.add('hidden')"
-                            class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600"
+                            class="dh-btn-ghost"
                         >
                             {{ __('Cancel') }}
                         </button>

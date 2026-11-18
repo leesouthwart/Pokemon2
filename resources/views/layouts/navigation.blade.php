@@ -1,150 +1,165 @@
-<nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
+@php
+    $isOwner = Auth::check() && Auth::user()->email === 'leesouthwart@gmail.com';
+
+    $sections = [
+        [
+            'label' => 'Arbitrage',
+            'items' => [
+                ['label' => 'PSA 10 list', 'route' => 'cardrush', 'icon' => 'fa-chart-line'],
+                ['label' => 'Raw list', 'route' => 'cardrush-raw', 'icon' => 'fa-layer-group'],
+                ['label' => 'Bulk import', 'route' => 'cards.bulk-import', 'icon' => 'fa-file-import'],
+            ],
+        ],
+        [
+            'label' => 'Buylists',
+            'items' => [
+                ['label' => 'All buylists', 'route' => 'buylist.index', 'icon' => 'fa-list-check'],
+            ],
+            'patterns' => ['buylist.*'],
+        ],
+        [
+            'label' => 'Sniping',
+            'items' => array_values(array_filter([
+                $isOwner ? ['label' => 'PSA 10 auctions', 'route' => 'psa-japanese-auctions', 'icon' => 'fa-gavel'] : null,
+                $isOwner ? ['label' => 'PSA API listings', 'route' => 'psa-japanese-api-listings', 'icon' => 'fa-satellite-dish'] : null,
+                $isOwner ? ['label' => 'CGC 10 auctions', 'route' => 'cgc-japanese-auctions', 'icon' => 'fa-gavel'] : null,
+                $isOwner ? ['label' => 'CGC API listings', 'route' => 'cgc-japanese-api-listings', 'icon' => 'fa-satellite-dish'] : null,
+                ['label' => 'Won bids', 'route' => 'bids.won.index', 'icon' => 'fa-trophy'],
+                ['label' => 'Listing titles', 'route' => 'cards.psa-title.index', 'icon' => 'fa-tags'],
+            ])),
+            'patterns' => ['psa-japanese-*', 'cgc-japanese-*', 'bids.won.*', 'cards.psa-title.*'],
+        ],
+        [
+            'label' => 'Selling',
+            'items' => [
+                ['label' => 'PSA listing upload', 'route' => 'batch.create', 'icon' => 'fa-upload'],
+                ['label' => 'Batches', 'route' => 'batch.index', 'icon' => 'fa-boxes-stacked'],
+            ],
+            'patterns' => ['batch.*'],
+        ],
+        [
+            'label' => 'Groups',
+            'items' => [
+                ['label' => 'All groups', 'route' => 'card_group.index', 'icon' => 'fa-folder'],
+                ['label' => 'Bulk add to group', 'route' => 'card_group.bulk-add', 'icon' => 'fa-folder-plus'],
+            ],
+            'patterns' => ['card_group.*'],
+        ],
+    ];
+
+    foreach ($sections as &$section) {
+        $patterns = array_merge($section['patterns'] ?? [], array_column($section['items'], 'route'));
+        $section['active'] = request()->routeIs(...$patterns);
+    }
+    unset($section);
+
+    $profitData = Auth::check() ? Auth::user()->calculateProfit() : null;
+    $initials = Auth::check()
+        ? collect(explode(' ', Auth::user()->name))->map(fn ($part) => mb_substr($part, 0, 1))->take(2)->join('')
+        : '?';
+@endphp
+
+<header x-data="{ mobileOpen: false }" class="sticky top-0 z-40 border-b border-white/10 bg-ink/80 backdrop-blur">
+    <div class="mx-auto flex h-16 max-w-[1400px] items-center gap-6 px-4 sm:px-6">
+        <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 shrink-0">
+            <div class="grid h-9 w-9 place-items-center rounded-xl bg-yellow-400 font-bold text-ink">DH</div>
+            <span class="hidden text-lg font-semibold text-white sm:inline">DarkHoundoom</span>
+        </a>
+
+        <nav class="hidden items-center gap-1 lg:flex">
+            @foreach($sections as $section)
+                @if(count($section['items']) === 1)
+                    <a href="{{ route($section['items'][0]['route']) }}" class="dh-nav-link {{ $section['active'] ? 'is-active' : '' }}">
+                        {{ $section['label'] }}
                     </a>
-                </div>
-
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                </div>
-            </div>
-
-            <div class="hidden sm:flex sm:items-center sm:space-x-4 sm:ml-6">
-                <a 
-                    href="{{ route('ebay.login') }}"
-                    class="inline-flex items-center px-4 py-2 rounded-md bg-green-600 text-white text-sm font-semibold hover:bg-green-500 transition"
-                >
-                    Login to eBay
-                </a>
-                
-                @auth
-                    @php
-                        $profitData = Auth::user()->calculateProfit();
-                    @endphp
-                    <!-- Profit Display -->
-                    <div class="relative group">
-                        <div class="inline-flex items-center px-3 py-2 rounded-md text-sm font-semibold transition cursor-pointer
-                            {{ $profitData['profit'] >= 0 
-                                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
-                                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' }}">
-                            <span class="font-medium">Profit:</span>
-                            <span class="ml-2 font-bold">
-                                ${{ number_format($profitData['profit'], 2) }}
-                            </span>
-                        </div>
-                        
-                        <!-- Tooltip -->
-                        <div class="absolute right-0 top-full mt-2 w-64 p-3 bg-gray-900 dark:bg-gray-800 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                            <div class="space-y-2">
-                                <div class="flex justify-between items-center border-b border-gray-700 pb-2">
-                                    <span class="text-gray-400">Payouts:</span>
-                                    <span class="font-semibold text-green-400">${{ number_format($profitData['payouts'], 2) }}</span>
-                                </div>
-                                <div class="flex justify-between items-center border-b border-gray-700 pb-2">
-                                    <span class="text-gray-400">Spent:</span>
-                                    <span class="font-semibold text-red-400">${{ number_format($profitData['spent'], 2) }}</span>
-                                </div>
-                                <div class="flex justify-between items-center pt-2">
-                                    <span class="text-gray-400">Net Profit:</span>
-                                    <span class="font-bold {{ $profitData['profit'] >= 0 ? 'text-green-400' : 'text-red-400' }}">
-                                        ${{ number_format($profitData['profit'], 2) }}
-                                    </span>
-                                </div>
-                            </div>
-                            <!-- Arrow -->
-                            <div class="absolute bottom-full right-4 border-4 border-transparent border-b-gray-900 dark:border-b-gray-800"></div>
+                @else
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+                        <button type="button" @click="open = !open" class="dh-nav-link {{ $section['active'] ? 'is-active' : '' }}">
+                            {{ $section['label'] }}
+                            <i class="fas fa-chevron-down text-[9px] opacity-60 transition" :class="open && 'rotate-180'"></i>
+                        </button>
+                        <div x-cloak x-show="open" x-transition.opacity.duration.150ms class="dh-menu">
+                            @foreach($section['items'] as $item)
+                                <a href="{{ route($item['route']) }}" class="dh-menu-item {{ request()->routeIs($item['route']) ? 'is-active' : '' }}">
+                                    <i class="fas {{ $item['icon'] }}"></i>{{ $item['label'] }}
+                                </a>
+                            @endforeach
                         </div>
                     </div>
-                @endauth
-                
-                <!-- Settings Dropdown -->
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name ?? 'Guest' }}</div>
+                @endif
+            @endforeach
+        </nav>
 
-                            <div class="ml-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
+        <div class="ml-auto flex items-center gap-2 sm:gap-3 text-sm">
+            @if($profitData)
+                <div class="relative group hidden sm:block">
+                    <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 tnum cursor-default
+                        {{ $profitData['profit'] >= 0 ? 'border-emerald-400/30 text-emerald-300' : 'border-rose-500/30 text-rose-300' }}">
+                        <i class="fas fa-wallet text-yellow-400"></i>
+                        {{ $profitData['profit'] < 0 ? '-' : '' }}${{ number_format(abs($profitData['profit']), 2) }}
+                    </span>
+                    <div class="invisible absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-white/10 bg-ink-800/95 p-4 text-sm opacity-0 shadow-2xl shadow-black/50 backdrop-blur transition group-hover:visible group-hover:opacity-100">
+                        <div class="flex justify-between border-b border-white/10 pb-2">
+                            <span class="dh-muted">Payouts</span>
+                            <span class="font-semibold text-emerald-300 tnum">${{ number_format($profitData['payouts'], 2) }}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-white/10 py-2">
+                            <span class="dh-muted">Spent</span>
+                            <span class="font-semibold text-rose-300 tnum">${{ number_format($profitData['spent'], 2) }}</span>
+                        </div>
+                        <div class="flex justify-between pt-2">
+                            <span class="dh-muted">Net profit</span>
+                            <span class="font-bold tnum {{ $profitData['profit'] >= 0 ? 'text-emerald-300' : 'text-rose-300' }}">${{ number_format($profitData['profit'], 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
+            <a href="{{ route('ebay.login') }}" class="hidden rounded-full border border-white/10 px-3 py-1.5 transition hover:bg-white/5 hover:text-white md:inline-flex md:items-center md:gap-1.5">
+                <i class="fab fa-ebay text-base leading-none"></i> Connect
+            </a>
 
-                        <!-- Authentication -->
+            <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+                <button type="button" @click="open = !open" class="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-xs font-semibold uppercase text-white ring-2 ring-transparent transition hover:ring-white/20">
+                    {{ $initials }}
+                </button>
+                <div x-cloak x-show="open" x-transition.opacity.duration.150ms class="dh-menu left-auto right-0 w-56">
+                    @auth
+                        <div class="px-3 py-2">
+                            <div class="truncate font-medium text-white">{{ Auth::user()->name }}</div>
+                            <div class="truncate text-xs dh-muted">{{ Auth::user()->email }}</div>
+                        </div>
+                        <div class="my-1 border-t border-white/10"></div>
+                        <a href="{{ route('profile.edit') }}" class="dh-menu-item"><i class="fas fa-user"></i>Profile</a>
+                        <a href="{{ route('ebay.login') }}" class="dh-menu-item"><i class="fab fa-ebay"></i>Login to eBay</a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
+                            <button type="submit" class="dh-menu-item w-full"><i class="fas fa-arrow-right-from-bracket"></i>Log out</button>
                         </form>
-                    </x-slot>
-                </x-dropdown>
+                    @else
+                        <a href="{{ route('login') }}" class="dh-menu-item"><i class="fas fa-arrow-right-to-bracket"></i>Log in</a>
+                    @endauth
+                </div>
             </div>
 
-            <!-- Hamburger -->
-            <div class="-mr-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            <button type="button" @click="mobileOpen = !mobileOpen" class="grid h-9 w-9 place-items-center rounded-full border border-white/10 lg:hidden">
+                <i class="fas" :class="mobileOpen ? 'fa-xmark' : 'fa-bars'"></i>
+            </button>
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('ebay.login')">
-                Login to eBay
-            </x-responsive-nav-link>
-        </div>
-
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user()->name ?? 'Guest' }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email ?? ' - ' }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
+    <div x-cloak x-show="mobileOpen" x-transition class="border-t border-white/10 px-4 py-4 lg:hidden">
+        <div class="grid gap-4 sm:grid-cols-2">
+            @foreach($sections as $section)
+                <div>
+                    <div class="mb-1 px-3 text-xs font-medium uppercase tracking-wider dh-muted">{{ $section['label'] }}</div>
+                    @foreach($section['items'] as $item)
+                        <a href="{{ route($item['route']) }}" class="dh-menu-item {{ request()->routeIs($item['route']) ? 'is-active' : '' }}">
+                            <i class="fas {{ $item['icon'] }}"></i>{{ $item['label'] }}
+                        </a>
+                    @endforeach
+                </div>
+            @endforeach
         </div>
     </div>
-</nav>
+</header>

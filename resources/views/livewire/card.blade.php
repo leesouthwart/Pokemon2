@@ -1,134 +1,65 @@
+@php
+    $gb = \App\Models\Region::GB;
+    $roi = $rois[$gb] ?? 0;
+    $psa10 = $psa10Prices[$gb] ?? 0;
+    $raw = $rawPrices[$gb] ?? 0;
+    $sym = $currency->symbol;
+    $warn = '<i class="fas fa-triangle-exclamation text-rose-400"></i>';
+@endphp
 
-<tr class="cursor-pointer">    
-    <td class="pl-4">
-        <input wire:model="selected" type="checkbox" wire:click="emitSelectedCard({{ $card->id }})">
+<tr class="cursor-pointer {{ $selected ? 'bg-yellow-400/[0.06]' : '' }}">
+    <td class="w-10">
+        <input wire:model="selected" type="checkbox" wire:click="emitSelectedCard({{ $card->id }})" class="dh-check">
     </td>
 
-    <td class="py-4 pl-4" wire:click="selectCard">
-        <div class="flex items-center">
-            <img src="{{$card->image_url}}" class="aspect-[4/5] h-20">
+    <td wire:click="selectCard">
+        <div class="flex items-center gap-3">
+            @if($card->image_url)
+                <img src="{{ $card->image_url }}" alt="" loading="lazy" class="h-14 w-10 shrink-0 rounded-md bg-black/20 object-contain">
+            @else
+                <div class="grid h-14 w-10 shrink-0 place-items-center rounded-md bg-white/5 text-violet-200/20"><i class="fas fa-image"></i></div>
+            @endif
+            <div class="min-w-0">
+                <div class="max-w-[320px] truncate font-medium text-white">{{ $card->search_term }}</div>
+                @if($card->updated_at)
+                    <div class="text-xs dh-muted">Updated {{ $card->updated_at->diffForHumans() }}</div>
+                @endif
+            </div>
         </div>
     </td>
 
-    <td class="py-4 pl-4 pr-8 sm:pl-6 lg:pl-8" wire:click="selectCard">
-        <div class="flex items-center">
-            <div class="truncate text-sm font-medium leading-6 text-white">{{$card->search_term}}</div>
-        </div>
-    </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 text-gray-400">{{$currency->symbol}}{{$card->converted_price}}</div>
-        </div>
-    </td>
+    <td class="text-right font-semibold text-white tnum" wire:click="selectCard">{{ $sym }}{{ $card->converted_price }}</td>
 
     @if($mode === 'graded')
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 text-gray-400">
-                @if($bidPrice === null)
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                @else
-                    ${{ number_format($bidPrice, 2) }}
-                @endif
-            </div>
-        </div>
-    </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 text-gray-400">
-                @if(($psa10Prices[\App\Models\Region::GB] ?? 0) == 0)
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                @else
-                {{$currency->symbol}}{{$psa10Prices[\App\Models\Region::GB]}}
-                @endif
-            </div>
-        </div>
-    </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 text-gray-400">
-                @if(($psa10Prices[\App\Models\Region::GB] ?? 0) == 0)
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                @else
-                    {{$currency->symbol}}{{$averagePsa10Prices[\App\Models\Region::GB]}}
-                @endif
-            </div>
-        </div>
-    </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 {{$roiLowestColor}}">
-                @if(($rois[\App\Models\Region::GB] ?? 0) == 0)
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                @else
-                {{$rois[\App\Models\Region::GB]}}%
-                @endif
-            </div>
-        </div>
-    </td>
+        <td class="text-right dh-muted tnum" wire:click="selectCard">
+            {!! $bidPrice === null ? $warn : e('$' . number_format($bidPrice, 2)) !!}
+        </td>
+        <td class="text-right font-semibold text-white tnum" wire:click="selectCard">{!! $psa10 == 0 ? $warn : e($sym . $psa10) !!}</td>
+        <td class="text-right dh-muted tnum" wire:click="selectCard">{!! $psa10 == 0 ? $warn : e($sym . ($averagePsa10Prices[$gb] ?? 0)) !!}</td>
+        <td class="text-right" wire:click="selectCard">
+            @if($roi == 0)
+                {!! $warn !!}
+            @else
+                <span class="dh-badge {{ $roiBadge }}">{{ $roi }}%</span>
+            @endif
+        </td>
     @else
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 text-gray-400">
-                @if(($rawPrices[\App\Models\Region::GB] ?? 0) == 0)
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                @else
-                    {{$currency->symbol}}{{$rawPrices[\App\Models\Region::GB]}}
-                @endif
-            </div>
-        </div>
-    </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 text-gray-400">
-                @if(($rawPrices[\App\Models\Region::GB] ?? 0) == 0)
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                @else
-                    {{$currency->symbol}}{{$averageRawPrices[\App\Models\Region::GB]}}
-                @endif
-            </div>
-        </div>
-    </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 {{$roiLowestColor}}">
-                @if(($rois[\App\Models\Region::GB] ?? 0) == 0)
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                @else
-                    {{$rois[\App\Models\Region::GB]}}%
-                @endif
-            </div>
-        </div>
-    </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 text-gray-500">
-                @if(($psa10Prices[\App\Models\Region::GB] ?? 0) == 0)
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                @else
-                    {{$currency->symbol}}{{$psa10Prices[\App\Models\Region::GB]}}
-                @endif
-            </div>
-        </div>
-    </td>
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8" wire:click="selectCard">
-        <div class="flex gap-x-3">
-            <div class="font-mono text-sm leading-6 text-gray-500">
-                @if($gradedRoi == 0)
-                    <i class="fas fa-exclamation-triangle text-red-500"></i>
-                @else
-                    {{ $gradedRoi }}%
-                @endif
-            </div>
-        </div>
-    </td>
+        <td class="text-right font-semibold text-white tnum" wire:click="selectCard">{!! $raw == 0 ? $warn : e($sym . $raw) !!}</td>
+        <td class="text-right dh-muted tnum" wire:click="selectCard">{!! $raw == 0 ? $warn : e($sym . ($averageRawPrices[$gb] ?? 0)) !!}</td>
+        <td class="text-right" wire:click="selectCard">
+            @if($roi == 0)
+                {!! $warn !!}
+            @else
+                <span class="dh-badge {{ $roiBadge }}">{{ $roi }}%</span>
+            @endif
+        </td>
+        <td class="text-right dh-muted tnum" wire:click="selectCard">{!! $psa10 == 0 ? $warn : e($sym . $psa10) !!}</td>
+        <td class="text-right dh-muted tnum" wire:click="selectCard">{!! $gradedRoi == 0 ? $warn : e($gradedRoi . '%') !!}</td>
     @endif
 
-    <td class="hidden py-4 pl-0 pr-4 sm:table-cell sm:pr-8">
-        <a target="_blank" href="{{$card->url}}">
-            <div class="font-mono text-sm leading-6 text-gray-400">
-                <i class="fas fa-external-link-alt"></i>
-            </div>
+    <td class="text-right">
+        <a target="_blank" href="{{ $card->url }}" class="inline-grid h-8 w-8 place-items-center rounded-full text-violet-200/50 transition hover:bg-white/5 hover:text-white">
+            <i class="fas fa-arrow-up-right-from-square text-xs"></i>
         </a>
     </td>
 </tr>

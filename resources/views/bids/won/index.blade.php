@@ -1,102 +1,72 @@
 <x-app-layout>
-    <div class="bg-gray-900 py-10">
-        <div class="px-4 mb-6">
-            <h2 class="text-2xl font-bold text-white mb-4">Won Bids Awaiting Confirmation</h2>
-            
+    <div class="dh-page">
+        <x-page-header eyebrow="Sniping" title="Won bids">
+            <x-slot name="beside">
+                <span class="dh-badge dh-badge-yellow mb-2">{{ $bids->total() }} awaiting confirmation</span>
+            </x-slot>
+        </x-page-header>
+
+        <div class="mt-6 space-y-3">
             @if(session('success'))
-                <div class="bg-green-500 text-white p-4 rounded mb-4">
-                    {{ session('success') }}
-                </div>
+                <div class="dh-alert-success">{{ session('success') }}</div>
             @endif
-
             @if(session('error'))
-                <div class="bg-red-500 text-white p-4 rounded mb-4">
-                    {{ session('error') }}
-                </div>
-            @endif
-
-            @if($bids->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-700">
-                        <thead class="bg-gray-800">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Card / Title
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Bid Amount
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    End Price
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    End Date
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-gray-800 divide-y divide-gray-700">
-                            @foreach($bids as $bid)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            @if($bid->card && $bid->card->image_url)
-                                                <img src="{{ $bid->card->image_url }}" alt="Card image" class="h-16 w-16 object-cover rounded mr-4">
-                                            @endif
-                                            <div>
-                                                <div class="text-sm font-medium text-white">
-                                                    {{ $bid->ebay_title }}
-                                                </div>
-                                                @if($bid->card)
-                                                    <div class="text-sm text-gray-400">
-                                                        Card ID: {{ $bid->card->id }}
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
-                                        ${{ number_format($bid->bid_amount, 2) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
-                                        ${{ number_format($bid->end_price, 2) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                                        {{ $bid->end_date ? $bid->end_date->format('Y-m-d H:i') : 'N/A' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex gap-2">
-                                            <form action="{{ route('bids.won.confirm', $bid->id) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit" class="bg-green-700 hover:bg-green-800 text-white font-bold px-4 py-2 rounded transition">
-                                                    Confirm
-                                                </button>
-                                            </form>
-                                            <form action="{{ route('bids.won.decline', $bid->id) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit" class="bg-red-700 hover:bg-red-800 text-white font-bold px-4 py-2 rounded transition">
-                                                    Decline
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="mt-4">
-                    {{ $bids->links() }}
-                </div>
-            @else
-                <div class="bg-gray-800 p-6 rounded text-center">
-                    <p class="text-gray-400">No won bids awaiting confirmation.</p>
-                </div>
+                <div class="dh-alert-error">{{ session('error') }}</div>
             @endif
         </div>
+
+        @if($bids->count() > 0)
+            <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                @foreach($bids as $bid)
+                    <div class="dh-tile flex flex-col">
+                        <div class="flex gap-3">
+                            @if($bid->card && $bid->card->image_url)
+                                <img src="{{ $bid->card->image_url }}" alt="" class="h-28 w-20 shrink-0 rounded-lg bg-black/20 object-contain">
+                            @else
+                                <div class="grid h-28 w-20 shrink-0 place-items-center rounded-lg bg-white/5 text-violet-200/30"><i class="fas fa-trophy text-xl"></i></div>
+                            @endif
+                            <div class="min-w-0 flex-1">
+                                <p class="line-clamp-3 text-sm leading-snug text-white" title="{{ $bid->ebay_title }}">{{ $bid->ebay_title }}</p>
+                                @if($bid->card)
+                                    <p class="mt-1 text-xs dh-muted">Card #{{ $bid->card->id }}</p>
+                                @endif
+                                <p class="mt-1 text-xs dh-muted"><i class="far fa-calendar mr-1"></i>{{ $bid->end_date ? $bid->end_date->format('j M Y, H:i') : 'N/A' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                            <div class="dh-stat">
+                                <div class="dh-stat-label">Our max bid</div>
+                                <div class="dh-stat-value">${{ number_format($bid->bid_amount, 2) }}</div>
+                            </div>
+                            <div class="dh-stat">
+                                <div class="dh-stat-label">End price</div>
+                                <div class="dh-stat-value text-yellow-300">${{ number_format($bid->end_price, 2) }}</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 flex gap-2">
+                            <form action="{{ route('bids.won.confirm', $bid->id) }}" method="POST" class="flex-1">
+                                @csrf
+                                <button type="submit" class="dh-btn-success w-full"><i class="fas fa-check"></i> Confirm</button>
+                            </form>
+                            <form action="{{ route('bids.won.decline', $bid->id) }}" method="POST" class="flex-1">
+                                @csrf
+                                <button type="submit" class="dh-btn-danger w-full"><i class="fas fa-xmark"></i> Decline</button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="mt-8">
+                {{ $bids->links() }}
+            </div>
+        @else
+            <div class="dh-panel mt-6 py-16 text-center">
+                <i class="fas fa-trophy text-3xl text-violet-200/30"></i>
+                <p class="mt-3 dh-muted">No won bids awaiting confirmation.</p>
+            </div>
+        @endif
     </div>
 </x-app-layout>
-

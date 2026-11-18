@@ -1,42 +1,28 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+    <div class="dh-page">
+        <x-page-header eyebrow="Account" title="Profile" />
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
+        <div class="mt-8 grid gap-6 lg:grid-cols-2">
+            <div class="dh-panel p-6 sm:p-8">
+                @include('profile.partials.update-profile-information-form')
+            </div>
+
+            <div class="dh-panel p-6 sm:p-8">
+                @include('profile.partials.ebay-settings-form')
             </div>
 
             @if(auth()->user()->email === 'leesouthwart@gmail.com')
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
+                <div class="dh-panel p-6 sm:p-8">
                     @include('profile.partials.add-balance-form')
                 </div>
-            </div>
             @endif
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.ebay-settings-form')
-                </div>
+            <div class="dh-panel p-6 sm:p-8">
+                @include('profile.partials.update-password-form')
             </div>
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
-
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
+            <div class="rounded-2xl border border-rose-500/20 bg-rose-500/[0.04] p-6 sm:p-8">
+                @include('profile.partials.delete-user-form')
             </div>
         </div>
     </div>

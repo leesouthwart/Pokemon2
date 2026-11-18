@@ -1,13 +1,10 @@
-<x-app-layout class="flex">
-    <div class="flex">
-        <div class="bg-gray-900 w-full">
-            <div class="border-b-2 border-gray-700">
-                <livewire:card-group-form />
-            </div>
+<x-app-layout>
+    <div class="dh-page">
+        <x-page-header eyebrow="Groups" title="Card groups">
+            <a href="{{ route('card_group.bulk-add') }}" class="dh-btn-ghost"><i class="fas fa-folder-plus"></i> Bulk add cards</a>
+        </x-page-header>
 
-            <div>
-                <livewire:card-group-list />
-            </div>
-        </div>
+        <livewire:card-group-form />
+        <livewire:card-group-list />
     </div>
 </x-app-layout>

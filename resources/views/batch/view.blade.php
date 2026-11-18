@@ -1,3 +1,3 @@
-<x-app-layout class="flex">
+<x-app-layout>
     <livewire:batch-creation :batch="$batch" />
-</x-app-layout> 
+</x-app-layout>

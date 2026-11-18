@@ -9,6 +9,20 @@ use Illuminate\Http\Request;
 
 class BuylistController extends Controller
 {
+    public function index()
+    {
+        $buylists = Buylist::where('user_id', auth()->id())
+            ->withCount(['cards as in_stock_count' => function ($query) {
+                $query->where('buylist_card.in_stock', 1);
+            }])
+            ->latest()
+            ->paginate(24);
+
+        return view('buylist.index', [
+            'buylists' => $buylists,
+        ]);
+    }
+
     public function view(Buylist $buylist)
     {
         $cards = $buylist->cards()

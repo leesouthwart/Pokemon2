@@ -1,219 +1,78 @@
+@php
+    $isOwner = Auth::check() && Auth::user()->email === 'leesouthwart@gmail.com';
+
+    $tools = [
+        'Arbitrage' => [
+            ['route' => 'cardrush', 'title' => 'Cardrush PSA 10', 'desc' => 'Buy raw, grade, sell PSA 10. The ROI database.', 'icon' => 'fa-chart-line', 'tint' => 'from-yellow-400/30'],
+            ['route' => 'cardrush-raw', 'title' => 'Cardrush Raw', 'desc' => 'Buy raw on Cardrush, sell ungraded on eBay.', 'icon' => 'fa-layer-group', 'tint' => 'from-lime-400/25'],
+            ['route' => 'cards.bulk-import', 'title' => 'Bulk import', 'desc' => 'Paste search terms and links to import many cards at once.', 'icon' => 'fa-file-import', 'tint' => 'from-sky-400/25'],
+        ],
+        'Buying' => [
+            ['route' => 'buylist.index', 'title' => 'Buylists', 'desc' => 'Every list "Make me money" has generated for you.', 'icon' => 'fa-list-check', 'tint' => 'from-emerald-400/25'],
+            ['route' => 'card_group.bulk-add', 'title' => 'Card groups', 'desc' => 'Create groups and bulk-assign cards to them.', 'icon' => 'fa-folder-plus', 'tint' => 'from-pink-400/25'],
+        ],
+        'Sniping' => array_values(array_filter([
+            $isOwner ? ['route' => 'psa-japanese-auctions', 'title' => 'PSA 10 auctions', 'desc' => 'Japanese PSA 10 auctions ending in the next 24 hours.', 'icon' => 'fa-gavel', 'tint' => 'from-violet-400/30'] : null,
+            $isOwner ? ['route' => 'cgc-japanese-auctions', 'title' => 'CGC 10 auctions', 'desc' => 'CGC 10 auctions on the PSA account, bid manually.', 'icon' => 'fa-gavel', 'tint' => 'from-orange-400/25'] : null,
+            ['route' => 'bids.won.index', 'title' => 'Won bids', 'desc' => 'Confirm or decline auctions you have won.', 'icon' => 'fa-trophy', 'tint' => 'from-yellow-400/25'],
+        ])),
+        'Selling' => [
+            ['route' => 'batch.create', 'title' => 'PSA listing upload', 'desc' => 'Create eBay listings from a range of PSA cert numbers.', 'icon' => 'fa-upload', 'tint' => 'from-fuchsia-400/25'],
+            ['route' => 'batch.index', 'title' => 'Batches', 'desc' => 'Review and export previous listing batches.', 'icon' => 'fa-boxes-stacked', 'tint' => 'from-indigo-400/25'],
+        ],
+    ];
+@endphp
+
 <x-app-layout>
+    <div class="dh-page">
+        <div class="dh-eyebrow">Dashboard</div>
+        <h1 class="dh-h1">Welcome back{{ Auth::check() ? ', ' . strtok(Auth::user()->name, ' ') : '' }}</h1>
+        <p class="mt-2 max-w-xl dh-muted">Pick up where you left off: find a flip, snipe an auction, or ship a batch.</p>
 
-    <div class="py-12 space-y-4">
-        @if(Session::has('message'))
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{Session::get('message')}}
-                </div>
-            </div>
-        </div>
-        @endif
+        <div class="mt-6 space-y-3">
+            @if(Session::has('message'))
+                <div class="dh-alert-info">{{ Session::get('message') }}</div>
+            @endif
 
-        @if(!empty($ebayUsername))
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
-            <div class="bg-indigo-600/20 border border-indigo-500/40 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-indigo-100 flex items-center justify-between">
-                    <div>
-                        Hello, {{ $ebayUsername }}! Thanks for connecting your eBay account.
-                    </div>
-                    <form action="{{ route('ebay.create-auction-listing') }}" method="POST" class="ml-4">
+            @if(Session::has('error'))
+                <div class="dh-alert-error">{{ Session::get('error') }}</div>
+            @endif
+
+            @if(!empty($ebayUsername))
+                <div class="dh-alert-info flex flex-wrap items-center justify-between gap-3">
+                    <span><i class="fab fa-ebay mr-2 text-lg align-middle"></i>Connected as <strong class="text-white">{{ $ebayUsername }}</strong>.</span>
+                    <form action="{{ route('ebay.create-auction-listing') }}" method="POST">
                         @csrf
-                        <button 
-                            type="submit"
-                            class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded transition"
-                        >
-                            Create Test Auction (Sandbox)
-                        </button>
+                        <button type="submit" class="dh-btn-ghost dh-btn-sm">Create test auction (sandbox)</button>
                     </form>
                 </div>
-            </div>
+            @endif
         </div>
-        @endif
 
-        @if(Session::has('error'))
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-red-600/20 border border-red-500/40 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-red-100">
-                    {{Session::get('error')}}
+        @foreach($tools as $section => $items)
+            @continue(empty($items))
+            <section class="mt-10">
+                <div class="mb-4 flex items-center gap-3">
+                    <h2 class="text-sm font-medium uppercase tracking-wider dh-muted">{{ $section }}</h2>
+                    <div class="h-px flex-1 bg-white/10"></div>
                 </div>
-            </div>
-        </div>
-        @endif
-    </div>
 
-    <div class="container mx-auto">
-
-        <div class="overflow-hidden rounded-lg bg-gray-700 shadow sm:grid sm:grid-cols-3 sm:gap-px sm:divide-y-0">
-            <div class="group relative rounded-tl-lg rounded-tr-lg bg-gray-700 p-6 sm:rounded-tr-none">
-                <div>
-                  <span class="inline-flex rounded-lg bg-teal-50 p-3 text-teal-700 ring-4 ring-white">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="mt-8">
-                    <h3 class="text-base font-semibold leading-6 text-white">
-                        <a href="{{ route('cardrush') }}" class="focus:outline-none">
-                            <!-- Extend touch target to entire panel -->
-                            <span class="absolute inset-0" aria-hidden="true"></span>
-                            Cardrush PSA 10
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach($items as $tool)
+                        <a href="{{ route($tool['route']) }}" class="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07]">
+                            <div class="pointer-events-none absolute inset-0 bg-gradient-to-br {{ $tool['tint'] }} to-transparent opacity-40 transition group-hover:opacity-70"></div>
+                            <div class="relative flex items-start justify-between">
+                                <span class="grid h-11 w-11 place-items-center rounded-xl bg-white/10 text-lg text-white">
+                                    <i class="fas {{ $tool['icon'] }}"></i>
+                                </span>
+                                <i class="fas fa-arrow-right text-violet-200/30 transition group-hover:translate-x-0.5 group-hover:text-yellow-400"></i>
+                            </div>
+                            <h3 class="relative mt-6 text-lg font-semibold text-white">{{ $tool['title'] }}</h3>
+                            <p class="relative mt-1 text-sm dh-muted">{{ $tool['desc'] }}</p>
                         </a>
-                    </h3>
-                    <p class="mt-2 text-sm text-gray-400">Buy raw, grade, sell PSA 10 ROI database.</p>
+                    @endforeach
                 </div>
-                <span class="pointer-events-none absolute right-6 top-6 text-gray-400 group-hover:text-gray-300" aria-hidden="true">
-                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-                  </svg>
-                </span>
-            </div>
-            <div class="group relative bg-gray-700 p-6 border-l-gray-600 border-l-2">
-                <div>
-                  <span class="inline-flex rounded-lg bg-emerald-50 p-3 text-emerald-700 ring-4 ring-white">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="mt-8">
-                    <h3 class="text-base font-semibold leading-6 text-white">
-                        <a href="{{ route('cardrush-raw') }}" class="focus:outline-none">
-                            <span class="absolute inset-0" aria-hidden="true"></span>
-                            Cardrush Raw
-                        </a>
-                    </h3>
-                    <p class="mt-2 text-sm text-gray-400">Buy raw on Cardrush, sell ungraded on eBay.</p>
-                </div>
-                <span class="pointer-events-none absolute right-6 top-6 text-gray-400 group-hover:text-gray-300" aria-hidden="true">
-                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-                  </svg>
-                </span>
-            </div>
-            <div class="group relative bg-gray-700 p-6 border-l-gray-600 border-l-2">
-                <div>
-          <span class="inline-flex rounded-lg bg-purple-50 p-3 text-purple-700 ring-4 ring-white">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-            </svg>
-          </span>
-                </div>
-                <div class="mt-8">
-                    <h3 class="text-base font-semibold leading-6 text-white">
-                        <a href="{{ route('batch.create') }}" class="focus:outline-none">
-                            <!-- Extend touch target to entire panel -->
-                            <span class="absolute inset-0" aria-hidden="true"></span>
-                            PSA Listing Creation
-                        </a>
-                    </h3>
-                    <p class="mt-2 text-sm text-gray-400">Create PSA listings from a list of PSA cert numbers.</p>
-                </div>
-                <span class="pointer-events-none absolute right-6 top-6 text-gray-400 group-hover:text-gray-300" aria-hidden="true">
-          <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-          </svg>
-        </span>
-            </div>
-            <div class="group relative bg-gray-700 p-6 sm:rounded-tr-lg border-l-gray-600 border-l-2">
-                <div>
-                  <span class="inline-flex rounded-lg bg-yellow-50 p-3 text-yellow-700 ring-4 ring-white">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="mt-8">
-                    <h3 class="text-base font-semibold leading-6 text-white">
-                        <a href="{{ route('psa-japanese-auctions') }}" class="focus:outline-none">
-                            <!-- Extend touch target to entire panel -->
-                            <span class="absolute inset-0" aria-hidden="true"></span>
-                            Japanese PSA Auctions
-                        </a>
-                    </h3>
-                    <p class="mt-2 text-sm text-gray-400">Browse and bid on Japanese PSA 10 auctions ending soon.</p>
-                </div>
-                <span class="pointer-events-none absolute right-6 top-6 text-gray-400 group-hover:text-gray-300" aria-hidden="true">
-                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-                  </svg>
-                </span>
-            </div>
-
-            <div class="group relative bg-gray-700 p-6 border-l-gray-600 border-l-2 sm:border-t-2 sm:border-t-gray-600">
-                <div>
-                  <span class="inline-flex rounded-lg bg-orange-50 p-3 text-orange-700 ring-4 ring-white">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="mt-8">
-                    <h3 class="text-base font-semibold leading-6 text-white">
-                        <a href="{{ route('cgc-japanese-auctions') }}" class="focus:outline-none">
-                            <span class="absolute inset-0" aria-hidden="true"></span>
-                            Japanese CGC Auctions
-                        </a>
-                    </h3>
-                    <p class="mt-2 text-sm text-gray-400">Browse and bid on Japanese CGC 10 auctions ending soon.</p>
-                </div>
-                <span class="pointer-events-none absolute right-6 top-6 text-gray-400 group-hover:text-gray-300" aria-hidden="true">
-                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-                  </svg>
-                </span>
-            </div>
-
-            <div class="group relative bg-gray-700 p-6 border-l-gray-600 border-l-2 sm:border-l-0 sm:border-t-2 sm:border-t-gray-600">
-                <div>
-                  <span class="inline-flex rounded-lg bg-blue-50 p-3 text-blue-700 ring-4 ring-white">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="mt-8">
-                    <h3 class="text-base font-semibold leading-6 text-white">
-                        <a href="{{ route('cards.bulk-import') }}" class="focus:outline-none">
-                            <span class="absolute inset-0" aria-hidden="true"></span>
-                            Bulk Import Cards
-                        </a>
-                    </h3>
-                    <p class="mt-2 text-sm text-gray-400">Paste a list of cards (search term + link) to import many at once.</p>
-                </div>
-                <span class="pointer-events-none absolute right-6 top-6 text-gray-400 group-hover:text-gray-300" aria-hidden="true">
-                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-                  </svg>
-                </span>
-            </div>
-
-            <div class="group relative bg-gray-700 p-6 border-l-gray-600 border-l-2 sm:border-t-2 sm:border-t-gray-600">
-                <div>
-                  <span class="inline-flex rounded-lg bg-pink-50 p-3 text-pink-700 ring-4 ring-white">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="mt-8">
-                    <h3 class="text-base font-semibold leading-6 text-white">
-                        <a href="{{ route('card_group.bulk-add') }}" class="focus:outline-none">
-                            <span class="absolute inset-0" aria-hidden="true"></span>
-                            Bulk Add to Card Groups
-                        </a>
-                    </h3>
-                    <p class="mt-2 text-sm text-gray-400">Create new card groups and bulk-assign cards to them.</p>
-                </div>
-                <span class="pointer-events-none absolute right-6 top-6 text-gray-400 group-hover:text-gray-300" aria-hidden="true">
-                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-                  </svg>
-                </span>
-            </div>
+            </section>
+        @endforeach
     </div>
 </x-app-layout>

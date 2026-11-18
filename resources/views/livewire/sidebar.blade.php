@@ -1,54 +1,58 @@
-<div class="{{$show ? 'w-[465px]' : ''}} bg-gray-900 border-l-2 border-gray-700">
-    <div class="min-h-100">
-        <div class="bg-gray-800 justify-center align-center py-3 border-b border-gray-700 text-gray-300">
-            <div class="px-2">
-                <button class="bg-gray-600 hover:bg-gray-700 text-gray-500 font-bold px-2 rounded" wire:click="$toggle('show')">
-                    <i class="fas fa-bars"></i>
-                </button>
+<div x-data="{ open: $wire.entangle('show') }" x-on:card-selected.camel.window="open = true" x-on:keydown.escape.window="open = false">
+    <div x-cloak x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px]" @click="open = false"></div>
+
+    <aside x-cloak class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-white/10 bg-ink-800/95 shadow-2xl shadow-black/60 backdrop-blur transition-transform duration-300" :class="open ? 'translate-x-0' : 'translate-x-full'">
+        <div class="flex items-start gap-4 border-b border-white/10 p-5">
+            @if($card)
+                @if($card->image_url)
+                    <img src="{{ $card->image_url }}" alt="" class="h-24 w-[68px] shrink-0 rounded-lg bg-black/20 object-contain">
+                @endif
+                <div class="min-w-0 flex-1">
+                    <div class="dh-eyebrow">{{ $mode === 'raw' ? 'Live raw listings' : 'Live PSA 10 listings' }}</div>
+                    <div class="mt-1 font-semibold leading-tight text-white">{{ $card->search_term }}</div>
+                    <a href="{{ $card->url }}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-xs dh-muted hover:text-yellow-300">
+                        Open on Cardrush <i class="fas fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+            @else
+                <div class="flex-1 font-semibold text-white">Current listings</div>
+            @endif
+            <button type="button" class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 transition hover:bg-white/5 hover:text-white" @click="open = false">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 space-y-3 overflow-y-auto p-5">
+            <div wire:loading class="w-full py-10 text-center dh-muted">
+                <i class="fas fa-circle-notch fa-spin text-2xl text-yellow-400"></i>
             </div>
 
-            <p class="{{$show ? 'flex' : 'hidden'}} justify-center">Current Listings</p>
-        </div>
-
-        @if($loading)
-        <div role="status" class="h-100 flex justify-center align-start mt-5">
-            <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-                <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
-            </svg>
-            <span class="sr-only">Loading...</span>
-        </div>
-        @endif
-
-        <div class="bg-gray-800 text-gray-300 {{$show ? 'block' : 'hidden'}}">
-            @if($card)
+            @if($card && !empty($ebayData[$card->id]))
                 @foreach($ebayData[$card->id] as $listingData)
-                    <li class="flex flex-col gap-4 pt-12 sm:flex-row">
-                        <img class="aspect-[3/5] w-44 flex-none rounded object-cover" src="{{ $listingData['image'] }}" alt="">
-                        <div class="max-w-xl flex-auto">
-                            <div class="flex mb-0 mt-2 text-sm">
-                                <p class="mb-0 font-small"><i class="fas fa-star text-gray-300"></i></p>
-                                <p class="flex mb-0">{{$listingData['seller']['feedbackScore']}} ({{$listingData['seller']['feedbackPercentage']}}%)</p>
-                            </div>
-                            <p>{{$listingData['seller']['username']}}</p>
-                            <p class="mt-6 text-base leading-7 text-gray-300">{{$listingData['title']}}</p>
-                            <ul role="list" class="mt-6 flex flex-col gap-x-6">
-                                <li>
+                    <a href="{{ $listingData['url'] }}" target="_blank" class="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3 transition hover:bg-white/[0.07]">
+                        <img class="h-28 w-20 shrink-0 rounded-lg bg-black/20 object-cover" src="{{ $listingData['image'] }}" alt="">
+                        <div class="flex min-w-0 flex-1 flex-col">
+                            <p class="line-clamp-3 text-sm leading-snug text-white">{{ $listingData['title'] }}</p>
+                            <p class="mt-1 truncate text-xs dh-muted">
+                                {{ $listingData['seller']['username'] }} · <i class="fas fa-star text-[9px] text-yellow-400"></i>
+                                {{ $listingData['seller']['feedbackScore'] }} ({{ $listingData['seller']['feedbackPercentage'] }}%)
+                            </p>
+                            <div class="mt-auto flex items-end justify-between pt-2">
+                                <span class="text-lg font-semibold text-white tnum">
                                     @if($currency->id != \App\Models\Currency::GBP)
-                                        {{$currency->symbol}}{{$listingData['price'] * $currency->convertTo->where('id', $currency->id)->first()->pivot->conversion_rate}}
+                                        {{ $currency->symbol }}{{ $listingData['price'] * $currency->convertTo->where('id', $currency->id)->first()->pivot->conversion_rate }}
                                     @else
-                                        {{$currency->symbol}}{{$listingData['price']}}
+                                        {{ $currency->symbol }}{{ $listingData['price'] }}
                                     @endif
-                                </li>
-
-                                <li class="mt-2">
-                                    <a class="bg-gray-500 hover:bg-gray-400 text-white font-bold py-2 px-4 rounded mt-2" target="_blank" href="{{$listingData['url']}}">View on Ebay</a>
-                                </li>
-                            </ul>
+                                </span>
+                                <span class="text-xs dh-muted"><i class="fab fa-ebay text-base"></i></span>
+                            </div>
                         </div>
-                    </li>
+                    </a>
                 @endforeach
+            @elseif($card)
+                <div wire:loading.remove class="rounded-2xl border border-dashed border-white/10 py-10 text-center text-sm dh-muted">No listings found.</div>
             @endif
         </div>
-    </div>
+    </aside>
 </div>

@@ -1,129 +1,103 @@
-<div class="bg-gray-900 min-h-screen text-gray-200 py-8">
-    <div class="max-w-7xl mx-auto px-4">
-        <h1 class="text-2xl font-semibold mb-6">Bulk Add Cards to Group</h1>
+<div class="dh-page">
+    <x-page-header eyebrow="Groups" title="Bulk add to group">
+        <a href="{{ route('card_group.index') }}" class="dh-btn-ghost"><i class="fas fa-folder"></i> All groups</a>
+    </x-page-header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-gray-800 rounded-lg p-5">
-                <h2 class="text-lg font-semibold mb-3">Create new group</h2>
-                <div class="flex flex-col gap-3">
-                    <input
-                        type="text"
-                        wire:model.defer="newGroupName"
-                        placeholder="Group name..."
-                        class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+        <div class="dh-panel p-5">
+            <h2 class="dh-h2">Create new group</h2>
+            <div class="mt-4 flex flex-col gap-3">
+                <input type="text" wire:model.defer="newGroupName" placeholder="Group name…" class="dh-input">
 
-                    <label class="inline-flex items-center text-sm text-gray-300">
-                        <input type="checkbox" wire:model="useInBuylistGeneration" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-2">
-                        Use in buylist generation
-                    </label>
+                <label class="inline-flex items-center gap-2 text-sm">
+                    <input type="checkbox" wire:model="useInBuylistGeneration" class="dh-check">
+                    Use in buylist generation
+                </label>
 
-                    <div>
-                        <button type="button"
-                                wire:click="createGroup"
-                                class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded">
-                            Create group
-                        </button>
-                    </div>
+                <div>
+                    <button type="button" wire:click="createGroup" class="dh-btn-primary"><i class="fas fa-plus"></i> Create group</button>
                 </div>
             </div>
-
-            <div class="bg-gray-800 rounded-lg p-5">
-                <h2 class="text-lg font-semibold mb-3">Target group</h2>
-                <select wire:model.live="selectedGroupId" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
-                    <option value="">-- Select a group --</option>
-                    @foreach($groups as $group)
-                        <option value="{{ $group->id }}">{{ $group->name }} ({{ $group->cards()->count() }})</option>
-                    @endforeach
-                </select>
-
-                @if($selectedGroup)
-                    <p class="text-sm text-gray-400 mt-2">
-                        Currently {{ $selectedGroup->cards()->count() }}
-                        {{ \Illuminate\Support\Str::plural('card', $selectedGroup->cards()->count()) }}
-                        in <strong>{{ $selectedGroup->name }}</strong>.
-                    </p>
-                @endif
-
-                <label class="inline-flex items-center text-sm text-gray-300 mt-3">
-                    <input type="checkbox" wire:model.live="hideAlreadyInGroup" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-2">
-                    Hide cards already in selected group
-                </label>
-            </div>
         </div>
 
-        <div class="bg-gray-800 rounded-lg p-5">
-            <div class="flex flex-wrap items-center gap-3 mb-4">
-                <input
-                    type="text"
-                    wire:model.live.debounce.300ms="search"
-                    placeholder="Search cards..."
-                    class="flex-1 min-w-[200px] rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
+        <div class="dh-panel p-5">
+            <h2 class="dh-h2">Target group</h2>
+            <select wire:model.live="selectedGroupId" class="dh-select mt-4">
+                <option value="">Select a group…</option>
+                @foreach($groups as $group)
+                    <option value="{{ $group->id }}">{{ $group->name }} ({{ $group->cards()->count() }})</option>
+                @endforeach
+            </select>
 
-                <span class="text-sm text-gray-400">
-                    Selected: <strong class="text-white">{{ count($selectedCards) }}</strong>
-                </span>
+            @if($selectedGroup)
+                <p class="mt-3 text-sm dh-muted">
+                    Currently <span class="text-white">{{ $selectedGroup->cards()->count() }}</span>
+                    {{ \Illuminate\Support\Str::plural('card', $selectedGroup->cards()->count()) }}
+                    in <strong class="text-white">{{ $selectedGroup->name }}</strong>.
+                </p>
+            @endif
 
-                <button type="button"
-                        wire:click="selectAllOnPage({{ json_encode($pageCardIds) }})"
-                        class="bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold py-1.5 px-3 rounded">
-                    Select page
-                </button>
+            <label class="mt-3 inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" wire:model.live="hideAlreadyInGroup" class="dh-check">
+                Hide cards already in selected group
+            </label>
+        </div>
+    </div>
 
-                <button type="button"
-                        wire:click="clearSelection"
-                        class="bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold py-1.5 px-3 rounded">
-                    Clear selection
-                </button>
+    <div class="mt-6 flex flex-wrap items-center gap-2 text-sm">
+        <div class="relative w-full sm:w-72">
+            <i class="fas fa-magnifying-glass pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs text-violet-200/50"></i>
+            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search cards" class="dh-input pl-10">
+        </div>
 
-                <button type="button"
-                        wire:click="addSelectedToGroup"
-                        @disabled(!$selectedGroupId || empty($selectedCards))
-                        class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded">
-                    Add {{ count($selectedCards) }} to group
-                </button>
-            </div>
+        <button type="button" wire:click="selectAllOnPage({{ json_encode($pageCardIds) }})" class="dh-chip">Select page</button>
+        <button type="button" wire:click="clearSelection" class="dh-chip">Clear selection</button>
 
-            <table class="w-full text-left">
-                <thead class="border-b border-white/10 text-sm text-white">
-                    <tr>
-                        <th class="py-2 px-2 w-10"></th>
-                        <th class="py-2 px-2 w-16"></th>
-                        <th class="py-2 px-2">Card name</th>
-                        <th class="py-2 px-2">Raw price (JPY)</th>
-                        <th class="py-2 px-2">Groups</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-white/5">
-                    @forelse($cards as $card)
-                        <tr wire:key="card-{{ $card->id }}" class="text-sm">
-                            <td class="py-2 px-2">
-                                <input type="checkbox"
-                                       value="{{ $card->id }}"
-                                       wire:model.live="selectedCards"
-                                       class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                            </td>
-                            <td class="py-2 px-2">
+        <div class="ml-auto flex items-center gap-3">
+            <span class="dh-muted">Selected <strong class="text-white tnum">{{ count($selectedCards) }}</strong></span>
+            <button type="button" wire:click="addSelectedToGroup" @disabled(!$selectedGroupId || empty($selectedCards)) class="dh-btn-primary">
+                <i class="fas fa-folder-plus"></i> Add {{ count($selectedCards) }} to group
+            </button>
+        </div>
+    </div>
+
+    <div class="dh-panel mt-6 overflow-x-auto">
+        <table class="dh-table">
+            <thead>
+                <tr>
+                    <th class="w-10"></th>
+                    <th>Card</th>
+                    <th class="text-right">Raw price (JPY)</th>
+                    <th>Groups</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($cards as $card)
+                    <tr wire:key="card-{{ $card->id }}" class="{{ in_array($card->id, $selectedCards) ? 'bg-yellow-400/[0.06]' : '' }}">
+                        <td>
+                            <input type="checkbox" value="{{ $card->id }}" wire:model.live="selectedCards" class="dh-check">
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-3">
                                 @if($card->image_url)
-                                    <img src="{{ $card->image_url }}" alt="" class="h-12 w-auto rounded">
+                                    <img src="{{ $card->image_url }}" alt="" loading="lazy" class="h-12 w-9 shrink-0 rounded-md bg-black/20 object-contain">
                                 @endif
-                            </td>
-                            <td class="py-2 px-2">{{ $card->search_term }}</td>
-                            <td class="py-2 px-2">{{ $card->cr_price }}</td>
-                            <td class="py-2 px-2 text-xs text-gray-400">
-                                {{ $card->cardGroups->pluck('name')->join(', ') ?: '—' }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="py-6 text-center text-gray-400">No cards match your filters.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                <span class="font-medium text-white">{{ $card->search_term }}</span>
+                            </div>
+                        </td>
+                        <td class="text-right tnum">{{ $card->cr_price }}</td>
+                        <td class="text-xs dh-muted">{{ $card->cardGroups->pluck('name')->join(', ') ?: '—' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="py-10 text-center dh-muted">No cards match your filters.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
-            <div class="mt-4">
-                {{ $cards->links() }}
-            </div>
-        </div>
+    <div class="mt-8">
+        {{ $cards->links() }}
     </div>
 </div>

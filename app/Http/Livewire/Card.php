@@ -14,7 +14,9 @@ class Card extends Component
     public CardModel $card;
     public $searchTerm;
     public $roiLowestColor;
+    public $roiBadge;
     public $mode = 'graded';
+    public $display = 'list';
 
     public $psa10Prices = [];
     public $averagePsa10Prices = [];
@@ -29,10 +31,11 @@ class Card extends Component
     public $bidPrice;
 
 
-    public function mount($card, $mode = 'graded')
+    public function mount($card, $mode = 'graded', $display = null)
     {
         $this->card = $card;
         $this->mode = $mode;
+        $this->display = $display ?? $this->display;
         $this->searchTerm = $this->card->search_term;
         $this->setUpPrices();
         $this->calculateColours();
@@ -40,7 +43,7 @@ class Card extends Component
     }
     public function render()
     {
-        return view('livewire.card');
+        return view($this->display === 'grid' ? 'livewire.card-tile' : 'livewire.card');
     }
 
     public function selectCard()
@@ -50,30 +53,27 @@ class Card extends Component
 
     private function calculateColours()
     {
-        $lowest = $this->rois[\App\Models\Region::GB];
-
-        $colours = [
-            'light_green' => 'text-green-400',
-            'green' => 'text-green-600',
-            'orange' => 'text-yellow-500',
-            'red' => 'text-red-500',
-        ];
+        $lowest = $this->rois[\App\Models\Region::GB] ?? 0;
 
         if ($lowest > 75) {
-            $this->roiLowestColor =  $colours['light_green'];
+            $this->roiLowestColor = 'text-emerald-300';
+            $this->roiBadge = 'bg-emerald-400 text-emerald-950';
         } elseif ($lowest > 50) {
-            $this->roiLowestColor =  $colours['green'];
+            $this->roiLowestColor = 'text-lime-300';
+            $this->roiBadge = 'bg-lime-400 text-lime-950';
         } elseif ($lowest > 30) {
-            $this->roiLowestColor =  $colours['orange'];
+            $this->roiLowestColor = 'text-yellow-300';
+            $this->roiBadge = 'bg-yellow-400 text-yellow-950';
         } else {
-            $this->roiLowestColor =  $colours['red'];
+            $this->roiLowestColor = 'text-rose-300';
+            $this->roiBadge = 'bg-rose-500 text-white';
         }
     }
 
     public function cardUpdated($card)
     {
         if($this->card->id == $card['id']) {
-            $this->mount(CardModel::find($card['id']), $this->mode);
+            $this->mount(CardModel::find($card['id']), $this->mode, $this->display);
         }
     }
 

@@ -1,68 +1,38 @@
-<x-app-layout class="flex">
-    <div class="flex">
-        <div class="bg-gray-900 w-full">
-            
-            <table class="mt-6 w-full whitespace-nowrap text-left">
-                <colgroup>
-                    <col class="w-full sm:w-1/12">
-                    <col class="w-full sm:w-1/12">
-                    <col class="lg:w-4/12">
-                    <col class="lg:w-4/12">
-                    @if(($buylist->pricing_mode ?? 'graded') === 'graded')
-                    <col class="lg:w-1/12">
-                    @endif
-                    <col class="lg:w-1/12">
-                    <col class="lg:w-1/12">
-                    <col class="lg:w-1/12">
-                    @if(($buylist->pricing_mode ?? 'graded') === 'raw')
-                    <col class="lg:w-1/12">
-                    <col class="lg:w-1/12">
-                    @endif
-                    <col class="lg:w-1/12">
-                </colgroup>
-                <thead class="border-b border-white/10 text-sm leading-6 text-white">
-                <tr>
-                    <th scope="col" class="py-2 px-2 font-semibold"></th>
-                    <th scope="col" class="py-2 px-2 font-semibold"></th>
-                    <th scope="col" class="py-2 pl-4 pr-8 font-semibold sm:pl-6 lg:pl-8 cursor-pointer">Card Name</th>
-                    <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell cursor-pointer">Buy Price</th>
-                    @if(($buylist->pricing_mode ?? 'graded') === 'graded')
-                    <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20 cursor-pointer">PSA 10 (lowest)</th>
-                    <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold md:table-cell lg:pr-20 cursor-pointer">PSA 10 (average)</th>
-                    <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">ROI</th>
-                    @else
-                    <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20 cursor-pointer">Raw eBay (lowest)</th>
-                    <th scope="col" class="hidden py-2 pl-0 pr-8 font-semibold md:table-cell lg:pr-20 cursor-pointer">Raw eBay (average)</th>
-                    <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">Raw ROI</th>
-                    <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">PSA 10 (lowest)</th>
-                    <th scope="col" class="hidden py-2 pl-0 pr-4 text-left font-semibold sm:table-cell sm:pr-6 lg:pr-8">Graded ROI</th>
-                    @endif
-                    <th scope="col" class="hidden py-2 pl-0 pr-4 text-right font-semibold sm:table-cell sm:pr-6 lg:pr-8">Actions</th>
-                </tr>
-                </thead>
-                <tbody class="divide-y divide-white/5">
-                @forelse($groupedCards as $group)
-                    <tr class="bg-white/5">
-                        <td colspan="11" class="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white sm:px-6 lg:px-8">
-                            {{ $group['name'] }}
-                        </td>
-                    </tr>
+@php
+    $pricingMode = $buylist->pricing_mode ?? 'graded';
+    $cardCount = collect($groupedCards)->sum(fn ($group) => count($group['cards']));
+@endphp
 
+<x-app-layout>
+    <div class="dh-page">
+        <x-page-header :eyebrow="$pricingMode === 'raw' ? 'Raw buylist' : 'PSA 10 buylist'" :title="$buylist->name">
+            <x-slot name="beside">
+                <span class="dh-badge dh-badge-gray mb-2">{{ $cardCount }} in stock · {{ $buylist->created_at?->format('j M Y') }}</span>
+            </x-slot>
+            <a href="{{ route('buylist.index') }}" class="dh-btn-ghost"><i class="fas fa-arrow-left"></i> All buylists</a>
+        </x-page-header>
+
+        @forelse($groupedCards as $group)
+            <section class="mt-10">
+                <div class="mb-4 flex items-center gap-3">
+                    <h2 class="dh-h2">{{ $group['name'] }}</h2>
+                    <span class="dh-badge dh-badge-yellow">{{ count($group['cards']) }}</span>
+                    <div class="h-px flex-1 bg-white/10"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                     @foreach($group['cards'] as $card)
-                        <livewire:card :card="$card" :mode="$buylist->pricing_mode ?? 'graded'" :key="$card->id . '-' . ($card->pivot->card_group_id ?? 'ungrouped')"  :wire:key="$card->id . '-' . ($card->pivot->card_group_id ?? 'ungrouped')"/>
+                        <livewire:card :card="$card" :mode="$pricingMode" display="grid" :key="$card->id . '-' . ($card->pivot->card_group_id ?? 'ungrouped')" />
                     @endforeach
-                @empty
-                    <tr>
-                        <td colspan="11" class="px-4 py-6 text-sm text-gray-300 sm:px-6 lg:px-8">
-                            No in-stock cards found for this buylist.
-                        </td>
-                    </tr>
-                @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <livewire:sidebar :mode="$buylist->pricing_mode ?? 'graded'" />
-
+                </div>
+            </section>
+        @empty
+            <div class="dh-panel mt-8 py-16 text-center">
+                <i class="fas fa-box-open text-3xl text-violet-200/30"></i>
+                <p class="mt-3 dh-muted">No in-stock cards found for this buylist.</p>
+            </div>
+        @endforelse
     </div>
+
+    <livewire:sidebar :mode="$pricingMode" />
 </x-app-layout>

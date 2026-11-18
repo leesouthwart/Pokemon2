@@ -2,10 +2,218 @@
 @tailwind components;
 @tailwind utilities;
 
-.listing-image-container {
-    width: 150px;
-    height: 150px;
-    background-color: #6b7280;
+@layer base {
+    html {
+        color-scheme: dark;
+    }
+
+    body {
+        @apply bg-ink text-violet-100/80 antialiased;
+    }
+
+    select option {
+        background-color: #15122a;
+        color: #ede9fe;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    .tnum {
+        font-feature-settings: 'tnum';
+    }
+
+    .dh-page {
+        @apply relative z-10 mx-auto max-w-[1400px] px-4 sm:px-6 py-8;
+    }
+
+    .dh-eyebrow {
+        @apply text-sm font-medium text-yellow-400;
+    }
+
+    .dh-h1 {
+        @apply mt-1 text-3xl sm:text-4xl font-semibold text-white;
+    }
+
+    .dh-h2 {
+        @apply text-lg font-semibold text-white;
+    }
+
+    .dh-muted {
+        @apply text-violet-200/50;
+    }
+
+    .dh-panel {
+        @apply rounded-2xl border border-white/10 bg-white/[0.04];
+    }
+
+    .dh-tile {
+        @apply rounded-2xl border border-white/10 bg-white/[0.04] p-3 transition hover:-translate-y-0.5 hover:bg-white/[0.07];
+    }
+
+    .dh-stat {
+        @apply rounded-lg bg-white/5 px-2 py-1.5;
+    }
+
+    .dh-stat-label {
+        @apply text-[11px] text-violet-200/50;
+    }
+
+    .dh-stat-value {
+        @apply text-white font-semibold tnum;
+    }
+
+    /* Buttons */
+    .dh-btn {
+        @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/40 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .dh-btn-sm {
+        @apply px-3 py-1.5 text-xs;
+    }
+
+    .dh-btn-primary {
+        @apply dh-btn bg-yellow-400 font-semibold text-ink shadow-lg shadow-yellow-400/20 hover:bg-yellow-300;
+    }
+
+    .dh-btn-ghost {
+        @apply dh-btn border border-white/10 text-violet-100/80 hover:bg-white/5 hover:text-white;
+    }
+
+    .dh-btn-violet {
+        @apply dh-btn bg-violet-500 text-white hover:bg-violet-400;
+    }
+
+    .dh-btn-success {
+        @apply dh-btn border border-emerald-400/30 bg-emerald-400/15 text-emerald-300 hover:bg-emerald-400/25;
+    }
+
+    .dh-btn-danger {
+        @apply dh-btn border border-rose-500/30 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25;
+    }
+
+    /* Form controls */
+    .dh-input {
+        @apply block w-full rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-violet-200/40 focus:border-yellow-400/50 focus:outline-none focus:ring-2 focus:ring-yellow-400/20;
+    }
+
+    .dh-input-sm {
+        @apply px-3 py-1.5 text-xs;
+    }
+
+    .dh-textarea {
+        @apply block w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-violet-200/40 focus:border-yellow-400/50 focus:outline-none focus:ring-2 focus:ring-yellow-400/20;
+    }
+
+    .dh-select {
+        @apply dh-input pr-9;
+    }
+
+    .dh-label {
+        @apply mb-1.5 block text-sm font-medium text-violet-100/80;
+    }
+
+    .dh-help {
+        @apply mt-1 text-xs text-violet-200/50;
+    }
+
+    .dh-check {
+        @apply rounded border-white/20 bg-white/5 text-yellow-400 focus:ring-yellow-400/30 focus:ring-offset-0;
+    }
+
+    /* Chips & badges */
+    .dh-chip {
+        @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/10 px-4 py-2 text-sm transition hover:bg-white/5 hover:text-white;
+    }
+
+    .dh-chip-active {
+        @apply border-yellow-400/40 bg-yellow-400/10 text-yellow-300 hover:bg-yellow-400/15 hover:text-yellow-200;
+    }
+
+    .dh-segment {
+        @apply flex rounded-full bg-white/5 p-1 text-sm;
+    }
+
+    .dh-segment > * {
+        @apply rounded-full px-4 py-1.5 transition hover:text-white;
+    }
+
+    .dh-segment > .is-active {
+        @apply bg-white font-medium text-ink hover:text-ink;
+    }
+
+    .dh-badge {
+        @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold tnum;
+    }
+
+    .dh-badge-green { @apply bg-emerald-400/15 text-emerald-300; }
+    .dh-badge-yellow { @apply bg-yellow-400/15 text-yellow-300; }
+    .dh-badge-red { @apply bg-rose-500/15 text-rose-300; }
+    .dh-badge-violet { @apply bg-violet-500/20 text-violet-200; }
+    .dh-badge-blue { @apply bg-sky-400/15 text-sky-300; }
+    .dh-badge-gray { @apply bg-white/10 text-violet-100/70; }
+
+    /* Alerts */
+    .dh-alert {
+        @apply rounded-2xl border px-4 py-3 text-sm;
+    }
+
+    .dh-alert-success { @apply dh-alert border-emerald-400/30 bg-emerald-400/10 text-emerald-200; }
+    .dh-alert-error { @apply dh-alert border-rose-500/30 bg-rose-500/10 text-rose-200; }
+    .dh-alert-info { @apply dh-alert border-violet-400/30 bg-violet-500/10 text-violet-100; }
+
+    /* Tables */
+    .dh-table {
+        @apply w-full text-left text-sm;
+    }
+
+    .dh-table thead th {
+        @apply whitespace-nowrap px-4 py-3 text-xs font-medium uppercase tracking-wider text-violet-200/50;
+    }
+
+    .dh-table tbody tr {
+        @apply border-t border-white/5 transition hover:bg-white/[0.03];
+    }
+
+    .dh-table tbody td {
+        @apply px-4 py-3 align-middle;
+    }
+
+    .dh-th-sort {
+        @apply cursor-pointer select-none hover:text-white;
+    }
+
+    /* Navigation */
+    .dh-nav-link {
+        @apply inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm transition hover:bg-white/5 hover:text-white;
+    }
+
+    .dh-nav-link.is-active {
+        @apply bg-white/10 text-white;
+    }
+
+    .dh-menu {
+        @apply absolute left-0 top-full z-50 mt-2 w-60 rounded-2xl border border-white/10 bg-ink-800/95 p-1.5 shadow-2xl shadow-black/50 backdrop-blur;
+    }
+
+    .dh-menu-item {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-violet-100/80 transition hover:bg-white/5 hover:text-white;
+    }
+
+    .dh-menu-item.is-active {
+        @apply bg-yellow-400/10 text-yellow-300;
+    }
+
+    .dh-menu-item i {
+        @apply w-4 text-center text-xs text-violet-200/50;
+    }
+
+    .dh-menu-item.is-active i {
+        @apply text-yellow-400;
+    }
 }
 
 .ebay_fee_text {

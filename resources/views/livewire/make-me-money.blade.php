@@ -1,84 +1,80 @@
-<div class="flex ml-auto mr-3">
-    <button class="bg-green-700 hover:bg-green-800 text-white font-bold px-4 rounded ml-2" wire:click="$set('showModal', true)">Make Me Money</button>
+<div>
+    <button class="dh-btn-primary px-5 py-2.5" wire:click="$set('showModal', true)">
+        <i class="fas fa-bolt"></i> Make me money
+    </button>
 
     @if($showModal)
-    <div class="modal absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black">
-        <div>
-            <button class="bg-red-700 hover:bg-red-800 text-white font-bold px-4 rounded ml-2 absolute top-[50px] right-[50px]" wire:click="$set('showModal', false)">close</button>
-        </div>
-        <div class="card-wrapper rounded-lg bg-white w-1/3 min-h-[50%]">
-            <div class="border-b border-gray-200 bg-white px-4 py-5 sm:px-6 w-full">
-                <div class="-ml-4 -mt-2 flex flex-wrap items-center justify-between sm:flex-nowrap">
-                    <div class="ml-4 mt-2">
-                        <h3 class="text-base font-semibold text-gray-900">Create List</h3>
-                    </div>
-                    <div class="ml-4 mt-2 shrink-0">
-                        <button wire:click="generate" type="button" class="relative inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Generate</button>
-                    </div>
-                </div>
-            </div>
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" wire:click.self="$set('showModal', false)">
+        <div class="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-ink-800 shadow-2xl shadow-black/60">
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(250,204,21,0.12),transparent_55%)]"></div>
 
-            <div class="p-4 border-b border-gray-200">
+            <div class="relative flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
                 <div>
-                    <label for="total" class="block text-sm/6 font-medium text-gray-900">Total cards</label>
-                    <div class="mt-2">
-                        <input wire:model.live="total" type="text" name="total" id="total" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
-                    </div>
+                    <div class="dh-eyebrow">{{ $mode === 'raw' ? 'Raw buylist' : 'PSA 10 buylist' }}</div>
+                    <h3 class="mt-1 text-2xl font-semibold text-white">Make me money</h3>
                 </div>
-            </div>
-    
-            @if(count($selectedGroups) > 0 && !$generating)
-            <div class="p-4 border-b border-gray-200">
-                @foreach($selectedGroups as $key => $selected)
-                <div class="mt-3 flex w-full">
-                    <select wire:change="changeGroup({{ $key }}, $event.target.value)" class="w-1/2 mr-3">
-                        @foreach($groups as $group)
-                            <option 
-                                {{ $selected['id'] == $group->id ? 'selected' : ''}}
-                                value="{{ $group->id }}">{{ $group->name }}
-                            </option>
-                        @endforeach
-                    </select>
-
-                    <input wire:model="selectedGroups.{{ $key }}.amount" type="text" placeholder="Card amount" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
-                </div>
-                @endforeach
-            </div>
-            @endif
-            
-            @if($generating == false)
-            <div class="p-4 text-right" wire:transition>
-                <button wire:click="addGroup" type="button" class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-                        <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-                    </svg>
+                <button type="button" class="grid h-9 w-9 place-items-center rounded-full border border-white/10 transition hover:bg-white/5 hover:text-white" wire:click="$set('showModal', false)">
+                    <i class="fas fa-xmark"></i>
                 </button>
             </div>
-            @endif
-            
 
-            @if($generating === true)
-            <div class="text-center mt-5">
-                <p>{{ $currentText }}</p>
+            <div class="relative space-y-5 px-6 py-5">
+                @if($generating === true)
+                    <div class="py-4 text-center">
+                        <p class="text-white">{{ $currentText ?: 'Starting…' }}</p>
 
-                <div class="w-3/4 mx-auto mt-4 mb-2 bg-gray-200 rounded-full h-3.5 dark:bg-gray-700">
-                    <div class="bg-indigo-600 h-3.5 rounded-full" style="width: {{ $progressPercentage }}%"></div>
-                </div>
+                        <div class="mx-auto mt-5 h-3 w-full overflow-hidden rounded-full bg-white/10">
+                            <div class="h-3 rounded-full bg-gradient-to-r from-yellow-400 to-lime-400 transition-all" style="width: {{ $progressPercentage }}%"></div>
+                        </div>
 
-                <p class="text-sm text-gray-500">{{ $progress }}/{{$total}} Cards Added</p>
+                        <p class="mt-3 text-sm dh-muted tnum">{{ $progress }}/{{ $total }} cards added</p>
 
-                @if($completed)
-                    <p><b>Buylist complete!</b></p>
-                    @if($buylist)
-                        <a href="{{ route('buylist.view', ['buylist' => $buylist->id]) }}" class="inline-block rounded-full bg-indigo-600 px-3 py-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">View</a>
-                    @endif
+                        @if($completed)
+                            <p class="mt-5 font-semibold text-emerald-300"><i class="fas fa-circle-check mr-1"></i> Buylist complete!</p>
+                            @if($buylist)
+                                <a href="{{ route('buylist.view', ['buylist' => $buylist->id]) }}" class="dh-btn-primary mt-4">View buylist <i class="fas fa-arrow-right"></i></a>
+                            @endif
+                        @endif
+                    </div>
+                @else
+                    <div>
+                        <label for="total" class="dh-label">Total cards</label>
+                        <input wire:model.live="total" type="text" name="total" id="total" class="dh-input">
+                    </div>
+
+                    <div>
+                        <div class="mb-2 flex items-center justify-between">
+                            <span class="dh-label mb-0">Groups</span>
+                            <button wire:click="addGroup" type="button" class="dh-btn-ghost dh-btn-sm"><i class="fas fa-plus"></i> Add group</button>
+                        </div>
+
+                        @if(count($selectedGroups) > 0)
+                            <div class="space-y-2">
+                                @foreach($selectedGroups as $key => $selected)
+                                    <div class="flex gap-2">
+                                        <select wire:change="changeGroup({{ $key }}, $event.target.value)" class="dh-select flex-[2]">
+                                            @foreach($groups as $group)
+                                                <option {{ $selected['id'] == $group->id ? 'selected' : '' }} value="{{ $group->id }}">{{ $group->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <input wire:model="selectedGroups.{{ $key }}.amount" type="text" placeholder="Cards" class="dh-input flex-1">
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="rounded-2xl border border-dashed border-white/10 px-4 py-6 text-center text-sm dh-muted">Add at least one group to pull cards from.</p>
+                        @endif
+                    </div>
                 @endif
             </div>
 
-                
-            @endif
-        </div>  
+            @unless($generating)
+                <div class="relative flex justify-end gap-2 border-t border-white/10 px-6 py-4">
+                    <button type="button" class="dh-btn-ghost" wire:click="$set('showModal', false)">Cancel</button>
+                    <button wire:click="generate" type="button" class="dh-btn-primary"><i class="fas fa-wand-magic-sparkles"></i> Generate</button>
+                </div>
+            @endunless
+        </div>
     </div>
     @endif
 </div>
-

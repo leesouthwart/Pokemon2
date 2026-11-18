@@ -1,145 +1,34 @@
-<div class="bg-gray-900 py-10">
-    <div class="px-4 mb-6 flex flex-wrap items-center gap-4">
-        <h2 class="text-2xl font-bold text-white">PSA Japanese PSA 10 Auctions (Ending in 24 Hours)</h2>
-        <div class="ml-auto flex items-center gap-3">
-            <a 
-                href="{{ route('cgc-japanese-auctions') }}"
-                class="bg-orange-700 hover:bg-orange-800 text-white font-bold px-4 py-2 rounded transition"
-            >
-                CGC Auctions
-            </a>
-            <a 
-                href="{{ route('psa-japanese-api-listings') }}"
-                class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-4 py-2 rounded transition"
-            >
-                View API Listings
-            </a>
-            <a 
-                href="{{ route('cards.psa-title.index') }}"
-                class="bg-green-700 hover:bg-green-800 text-white font-bold px-4 py-2 rounded transition"
-            >
-                Manage PSA Titles
-            </a>
-            <button 
-                wire:click="fetchListings" 
-                class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                @if($loading) disabled @endif
-            >
-                @if($loading)
-                    <span>Loading...</span>
-                @else
-                    <span>Refresh</span>
-                @endif
-            </button>
-        </div>
-    </div>
+@php
+    $hasListings = !empty($listings) && !(is_object($listings) && $listings->isEmpty());
+@endphp
 
-    @if($error)
-        <div class="px-4 mb-4">
-            <div class="bg-red-500 text-white p-4 rounded">
-                {{ $error }}
+<div class="dh-page">
+    <x-page-header eyebrow="Sniping · ending in 24 hours" title="PSA 10 auctions">
+        <x-slot name="beside">
+            <div class="dh-segment">
+                <a href="{{ route('psa-japanese-auctions') }}" class="is-active">PSA 10</a>
+                <a href="{{ route('cgc-japanese-auctions') }}">CGC 10</a>
             </div>
-        </div>
-    @endif
+        </x-slot>
 
-    @if($loading && empty($listings))
-        <div class="px-4">
-            <div class="text-white">Loading listings...</div>
-        </div>
-    @elseif(empty($listings))
-        <div class="px-4">
-            <div class="text-white">No listings found.</div>
-        </div>
-    @else
-        <table class="mt-6 w-full whitespace-nowrap text-left">
-            <colgroup>
-                <col class="w-1/12">
-                <col class="w-5/12">
-                <col class="w-2/12">
-                <col class="w-2/12">
-                <col class="w-2/12">
-            </colgroup>
-            <thead class="border-b border-white/10 text-sm leading-6 text-white">
-                <tr>
-                    <th scope="col" class="py-2 px-2 font-semibold">Image</th>
-                    <th scope="col" class="py-2 px-2 font-semibold">Title</th>
-                    <th scope="col" class="py-2 px-2 font-semibold">Current Bid</th>
-                    <th scope="col" class="py-2 px-2 font-semibold">Ends</th>
-                    <th scope="col" class="py-2 px-2 font-semibold">Bid</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-white/5">
-                @foreach($listings as $listing)
-                    <tr class="hover:bg-gray-800">
-                        <td class="py-2 px-2">
-                            <div class="flex items-center">
-                                <img src="{{ $listing['image'] }}" alt="{{ $listing['title'] }}" class="aspect-[4/5] h-24 object-contain">
-                            </div>
-                        </td>
-                        <td class="py-2 px-2">
-                            <div class="flex items-center">
-                                <a href="{{ $listing['url'] }}" target="_blank" class="text-sm font-medium leading-5 text-white hover:text-indigo-400">
-                                    {{ $listing['title'] }}
-                                </a>
-                            </div>
-                        </td>
-                        <td class="py-2 px-2">
-                            <div class="font-mono text-sm leading-5 text-gray-400">
-                               ${{ number_format($listing['currentBid'], 2) }}
-                            </div>
-                        </td>
-                        <td class="py-2 px-2">
-                            <div class="text-sm leading-5 text-gray-400">
-                                @if($listing['endDate'])
-                                    {{ \Carbon\Carbon::parse($listing['endDate'])->diffForHumans() }}
-                                @else
-                                    N/A
-                                @endif
-                            </div>
-                        </td>
-                        <td class="py-2 px-2">
-                            <div class="flex flex-col gap-2">
-                                <form wire:submit.prevent="submitBid('{{ $listing['itemId'] }}')" class="flex items-center gap-2">
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="{{ $listing['currentBid'] + 0.01 }}"
-                                        wire:model.defer="bidAmounts.{{ $listing['itemId'] }}"
-                                        class="w-24 rounded bg-gray-800 border border-gray-700 text-gray-200 text-sm px-2 py-1 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20"
-                                        placeholder="Amount"
-                                        value="{{ $bidAmounts[$listing['itemId']] ?? '' }}"
-                                    >
-                                    <button
-                                        type="submit"
-                                        class="bg-indigo-700 hover:bg-indigo-800 text-white text-sm font-semibold px-3 py-1 rounded ml-2"
-                                    >
-                                        Bid
-                                    </button>
-                                </form>
-                                @if(isset($bidStatus[$listing['itemId']]))
-                                    <div class="text-xs {{ $bidStatus[$listing['itemId']]['success'] ? 'text-green-400' : 'text-red-400' }}">
-                                        {{ $bidStatus[$listing['itemId']]['message'] }}
-                                    </div>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+        <a href="{{ route('psa-japanese-api-listings') }}" class="dh-btn-ghost"><i class="fas fa-satellite-dish"></i> API listings</a>
+        <a href="{{ route('cards.psa-title.index') }}" class="dh-btn-ghost"><i class="fas fa-tags"></i> PSA titles</a>
+        <button wire:click="fetchListings" class="dh-btn-primary" @if($loading) disabled @endif>
+            <i class="fas fa-rotate {{ $loading ? 'fa-spin' : '' }}"></i> {{ $loading ? 'Loading…' : 'Refresh' }}
+        </button>
+    </x-page-header>
 
-        <div class="mt-6 px-4">
-            @if($listings->total() > 20)
-                <div class="flex items-center justify-between">
-                    <div class="text-sm text-gray-400">
-                        Showing {{ $listings->firstItem() }} to {{ $listings->lastItem() }} of {{ $listings->total() }} results
-                    </div>
-                    <div>
-                        {{ $listings->links() }}
-                    </div>
-                </div>
-            @endif
+    @include('livewire.partials.auction-states')
+
+    @if($hasListings)
+        <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            @foreach($listings as $listing)
+                @include('livewire.partials.auction-tile', ['listing' => $listing])
+            @endforeach
         </div>
+
+        @if($listings->total() > 20)
+            <div class="mt-8">{{ $listings->links() }}</div>
+        @endif
     @endif
 </div>
-

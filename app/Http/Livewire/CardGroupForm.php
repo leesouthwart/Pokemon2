@@ -22,6 +22,7 @@ class CardGroupForm extends Component
         ]);
 
         $this->resetVars();
+        $this->dispatch('groupCreated');
     }
 
     public function resetVars()
